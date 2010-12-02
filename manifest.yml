@@ -1,2 +1,75 @@
 version: 0.0.1
 
+routes:
+    categories:
+        path: /v1/content/categories
+        controller: com_meego_ocs_controllers_content
+        action: categories
+#    licenses:
+#        path: /v1/content/licenses
+#        controller: com_meego_ocs_controllers_content
+#        action: licenses
+#    distributions:
+#        path: /v1/content/distributions
+#        controller: com_meego_ocs_controllers_content
+#        action: distributions
+#    dependencies:
+#        path: /v1/content/dependencies
+#        controller: com_meego_ocs_controllers_content
+#        action: dependencies
+#    homepagetypes:
+#        path: /v1/content/homepagetypes
+#        controller: com_meego_ocs_controllers_content
+#        action: homepagetypes
+#    list:
+#        path: /v1/content/list
+#        controller: com_meego_ocs_controllers_content
+#        action: list
+#    get:
+#        path: /v1/content/get
+#        controller: com_meego_ocs_controllers_content
+#        action: get
+#    download:
+#        path: /v1/content/download
+#        controller: com_meego_ocs_controllers_content
+#        action: download
+#    vote:
+#        path: /v1/content/vote
+#        controller: com_meego_ocs_controllers_content
+#        action: vote
+#    add:
+#        path: /v1/content/add
+#        controller: com_meego_ocs_controllers_content
+#        action: add
+#    edit:
+#        path: /v1/content/edit
+#        controller: com_meego_ocs_controllers_content
+#        action: edit
+#    delete:
+#        path: /v1/content/delete
+#        controller: com_meego_ocs_controllers_content
+#        action: delete
+#    upload:
+#        path: /v1/content/upload
+#        controller: com_meego_ocs_controllers_content
+#        action: upload
+#    uploaddownload:
+#        path: /v1/content/uploaddownload
+#        controller: com_meego_ocs_controllers_content
+#        action: uploaddownload
+#    deletedownload:
+#        path: /v1/content/deletedownload
+#        controller: com_meego_ocs_controllers_content
+#        action: deletedownload
+#    uploadpreview:
+#        path: /v1/content/uploadpreview
+#        controller: com_meego_ocs_controllers_content
+#        action: uploadpreview
+#    deletepreview:
+#        path: /v1/content/deletepreview
+#        controller: com_meego_ocs_controllers_content
+#        action: deletepreview
+#    recommendations:
+#        path: /v1/content/recommendations
+#        controller: com_meego_ocs_controllers_content
+#        action: recommendations
