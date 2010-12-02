@@ -9,10 +9,10 @@ routes:
 #        path: /v1/content/licenses
 #        controller: com_meego_ocs_controllers_content
 #        action: licenses
-#    distributions:
-#        path: /v1/content/distributions
-#        controller: com_meego_ocs_controllers_content
-#        action: distributions
+    distributions:
+        path: /v1/content/distributions
+        controller: com_meego_ocs_controllers_content
+        action: distributions
 #    dependencies:
 #        path: /v1/content/dependencies
 #        controller: com_meego_ocs_controllers_content
