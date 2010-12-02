@@ -25,10 +25,10 @@ routes:
 #        path: /v1/content/list
 #        controller: com_meego_ocs_controllers_content
 #        action: list
-#    get:
-#        path: /v1/content/get
-#        controller: com_meego_ocs_controllers_content
-#        action: get
+    get:
+        path: /v1/content/get/{$id}
+        controller: com_meego_ocs_controllers_content
+        action: get
 #    download:
 #        path: /v1/content/download
 #        controller: com_meego_ocs_controllers_content

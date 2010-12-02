@@ -71,6 +71,46 @@ class com_meego_ocs_controllers_content
         $this->output_xml($xml);
     }
 
+    public function get_get(array $args)
+    {
+        $storage = new midgard_query_storage('com_meego_package');
+        $q = new midgard_query_select($storage);
+        $q->set_constraint(new midgard_query_constraint(new midgard_query_property('id', $storage), '=', new midgard_query_value($args['id'])));
+        $q->execute();
+        if ($q->get_results_count() > 0)
+        {
+            $package=$q->list_objects();
+
+            $xml = new XMLWriter();
+            $xml->openMemory();
+            $xml->startElement('ocs');
+
+            $xml->startElement('meta');
+            $xml->writeElement('status', 'ok');
+            $xml->writeElement('statuscode', '100');
+            $xml->writeElement('message', '');
+            $xml->writeElement('totalitems', $q->get_results_count());
+            $xml->endElement(); // meta
+
+            $xml->startElement('data');
+
+                $xml->startElement('content'); //TODO: add details=full
+                $xml->writeElement('id', $package[0]->id);
+                $xml->writeElement('name', $package[0]->name);
+                $xml->writeElement('version', $package[0]->version);
+                $xml->writeElement('homepage', $package[0]->url);
+
+                $xml->endElement(); //content
+
+            $xml->endElement(); // data
+
+            $xml->endElement(); // ocs
+            $xml->endDocument();
+        }
+
+        $this->output_xml($xml);
+    }
+
     private function output_xml($xml)
     {
         midgardmvc_core::get_instance()->dispatcher->header('Content-type: application/xml');
