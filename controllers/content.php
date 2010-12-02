@@ -37,6 +37,11 @@ class com_meego_ocs_controllers_content
         $xml->endElement(); // ocs
         $xml->endDocument();
 
+        $this->output_xml($xml);
+    }
+
+    private function output_xml($xml)
+    {
         midgardmvc_core::get_instance()->dispatcher->header('Content-type: application/xml');
         echo $xml->outputMemory(true);
 
