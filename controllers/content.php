@@ -94,10 +94,13 @@ class com_meego_ocs_controllers_content
 
             $xml->startElement('data');
 
-                $xml->startElement('content'); //TODO: add details=full
+                $xml->startElement('content');
+                $xml->writeAttribute('details','full');
                 $xml->writeElement('id', $package[0]->id);
                 $xml->writeElement('name', $package[0]->name);
                 $xml->writeElement('version', $package[0]->version);
+                $xml->writeElement('description', $package[0]->description);
+                $xml->writeElement('summary', $package[0]->summary);
                 $xml->writeElement('homepage', $package[0]->url);
 
                 $xml->endElement(); //content
