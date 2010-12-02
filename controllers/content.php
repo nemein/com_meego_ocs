@@ -9,7 +9,7 @@ class com_meego_ocs_controllers_content
         $this->request = $request;
     }
 
-    public function categories()
+    public function get_categories(array $args)
     {
         $q = new midgard_query_select(new midgard_query_storage('com_meego_package_category'));
         $q->execute();
