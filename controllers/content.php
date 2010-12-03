@@ -56,7 +56,50 @@ class com_meego_ocs_controllers_content
         {
             if (isset($query['search']))
             {
-                $q->set_constraint(new midgard_query_constraint(new midgard_query_property('name', $storage), 'LIKE', new midgard_query_value('%' . $query['search'] .'%')));
+                $q->set_constraint(
+                    new midgard_query_constraint(
+                        new midgard_query_property('name', $storage),
+                        'LIKE',
+                        new midgard_query_value('%' . $query['search'] .'%')
+                    )
+                );
+            }
+            if (isset($query['distribution']))
+            {
+                $q->set_constraint(
+                    new midgard_query_constraint(
+                        new midgard_query_property('repository', $storage),
+                        'IN',
+                        new midgard_query_value(explode('x',$query['distribution']))
+                    )
+                );
+            }
+            if (isset($query['sortmode']))
+            {
+                switch ($query['sortmode'])
+                {
+                    case 'new'  :
+                                  $q->add_order(
+                                      new midgard_query_property('metadata.revised', $storage),
+                                      SORT_DESC);
+                                  break;
+                    case 'alpha':
+                                  $q->add_order(
+                                      new midgard_query_property('name', $storage),
+                                      SORT_ASC);
+                                  break;
+                    case 'high' :
+                                  $q->add_order(
+                                      new midgard_query_property('metadata.score', $storage),
+                                      SORT_DESC);
+                                  break;
+                    case 'down' :
+                                  echo "* TODO *";
+                                  break;
+                    default     :
+                                  throw new midgardmvc_exception_notfound("Unknown sort mode.");
+                                  break;
+                }
             }
         }
         if (isset($args['id']))
