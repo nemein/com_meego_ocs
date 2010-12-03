@@ -81,22 +81,47 @@ class com_meego_ocs_controllers_content
             $ocs->writeElement('created', $package[0]->metadata->created);
             $ocs->writeElement('changed', $package[0]->metadata->revised);
 
-            $qs = new midgard_query_storage('midgard_attachment');
-            $qb = new midgard_query_select($qs);
-            $qb->set_constraint(new midgard_query_constraint(new midgard_query_property('parentguid', $qs), '=', new midgard_query_value($package[0]->guid)));
-            $qb->execute();
-            if ($qb->get_results_count())
+            $counter = 0;
+            $attachments = $package[0]->list_attachments();
+            foreach ($attachments as $attachment)
             {
-                $counter = 0;
-                foreach($qb->list_objects() as $attachment)
-                {
-                    $counter++;
-                    $ocs->writeElement('previewpic' . $counter, "TODO: Add actual url.");
+                $counter++;
+                $package[0]->screenshoturl = midgardmvc_core::get_instance()->dispatcher->generate_url
+                (
+                    'attachmentserver_variant',
+                    array
+                    (
+                        'guid' => $attachment->guid,
+                        'variant' => 'sidesquare',
+                        'filename' => $attachment->name,
+                    ),
+                    '/'
+                );
+                $package[0]->smallscreenshoturl = midgardmvc_core::get_instance()->dispatcher->generate_url
+                (
+                    'attachmentserver_variant',
+                    array
+                    (
+                        'guid' => $attachment->guid,
+                        'variant' => 'thumbnail',
+                        'filename' => $attachment->name,
+                    ),
+                    '/'
+                );
 
-                    if ($counter == 3)
-                        break;
-                }
+                $ocs->writeElement('previewpic' . $counter, $package[0]->screenshoturl);
+                $ocs->writeElement('smallpreviewpic' . $counter, $package[0]->smallscreenshoturl);
+
+                if ($counter == 3)
+                    break;
             }
+
+            // Comments
+            $qs = new midgard_query_storage('com_meego_comments_comment');
+            $qb = new midgard_query_select($qs);
+            $qb->set_constraint(new midgard_query_constraint(new midgard_query_property('up', $qs), '=', new midgard_query_value($package[0]->guid)));
+            $qb->execute();
+            $ocs->writeElement('comments', $qb->get_results_count());
 
             $ocs->endElement(); //content
         }
