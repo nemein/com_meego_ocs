@@ -53,7 +53,7 @@ class com_meego_ocs_controllers_content
         self::output_xml($ocs);
     }
 
-    public function get_get(array $args)
+    public function get_data(array $args)
     {
         $storage = new midgard_query_storage('com_meego_package');
         $q = new midgard_query_select($storage);

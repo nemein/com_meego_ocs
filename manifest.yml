@@ -22,13 +22,13 @@ routes:
 #        controller: com_meego_ocs_controllers_content
 #        action: homepagetypes
 #    list:
-#        path: /v1/content/list
+#        path: /v1/content/data
 #        controller: com_meego_ocs_controllers_content
-#        action: list
+#        action: data
     get:
-        path: /v1/content/get/{$id}
+        path: /v1/content/data/{$id}
         controller: com_meego_ocs_controllers_content
-        action: get
+        action: data
 #    download:
 #        path: /v1/content/download
 #        controller: com_meego_ocs_controllers_content
