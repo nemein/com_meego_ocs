@@ -9,7 +9,7 @@ class com_meego_ocs_controllers_comments
         $this->request = $request;
     }
 
-    public function get(array $args)
+    public function get_get(array $args)
     {
         if ($args['type'] != 1)
         {
@@ -35,7 +35,7 @@ class com_meego_ocs_controllers_comments
                 new midgard_query_value($primary->guid)
             )
         );
-        $q->add_order(new midgard_query_property('metadata.created', $storage), 'ASC');
+        $q->add_order(new midgard_query_property('metadata.created', $storage), SORT_ASC);
 
         $ocs = new com_meego_ocs_OCSWriter();
 
@@ -81,5 +81,13 @@ class com_meego_ocs_controllers_comments
         $ocs->endDocument();
 
         self::output_xml($ocs);
+    }
+
+    private static function output_xml($xml)
+    {
+        midgardmvc_core::get_instance()->dispatcher->header('Content-type: application/xml');
+        echo $xml->outputMemory(true);
+
+        midgardmvc_core::get_instance()->dispatcher->end_request();
     }
 }
