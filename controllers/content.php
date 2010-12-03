@@ -15,16 +15,9 @@ class com_meego_ocs_controllers_content
         $q->execute();
 
         $ocs = new com_meego_ocs_OCSWriter();
-        $ocs->writeMeta($q->get_results_count());
 
-        $ocs->startElement('data');
-        foreach ($q->list_objects() as $obj) {
-            $ocs->startElement('category');
-            $ocs->writeElement('id', $obj->id);
-            $ocs->writeElement('name', $obj->name);
-            $ocs->endElement(); // category
-        }
-        $ocs->endElement(); // data
+        $ocs->writeMeta($q->get_results_count());
+        $ocs->writeCategories($q->list_objects());
 
         $ocs->endDocument();
 
@@ -67,71 +60,30 @@ class com_meego_ocs_controllers_content
         if ($cnt > 0)
         {
             $ocs->writeMeta($cnt);
-            $ocs->startElement('data');
-            $package = $q->list_objects();
 
-            $ocs->startElement('content');
-            $ocs->writeAttribute('details','full');
-            $ocs->writeElement('id', $package[0]->id);
-            $ocs->writeElement('name', $package[0]->name);
-            $ocs->writeElement('version', $package[0]->version);
-            $ocs->writeElement('description', $package[0]->description);
-            $ocs->writeElement('summary', $package[0]->summary);
-            $ocs->writeElement('homepage', $package[0]->url);
-            $ocs->writeElement('created', $package[0]->metadata->created);
-            $ocs->writeElement('changed', $package[0]->metadata->revised);
+            $packages = $q->list_objects();
 
-            $counter = 0;
-            $attachments = $package[0]->list_attachments();
-            foreach ($attachments as $attachment)
-            {
-                $counter++;
-                $package[0]->screenshoturl = midgardmvc_core::get_instance()->dispatcher->generate_url
-                (
-                    'attachmentserver_variant',
-                    array
-                    (
-                        'guid' => $attachment->guid,
-                        'variant' => 'sidesquare',
-                        'filename' => $attachment->name,
-                    ),
-                    '/'
-                );
-                $package[0]->smallscreenshoturl = midgardmvc_core::get_instance()->dispatcher->generate_url
-                (
-                    'attachmentserver_variant',
-                    array
-                    (
-                        'guid' => $attachment->guid,
-                        'variant' => 'thumbnail',
-                        'filename' => $attachment->name,
-                    ),
-                    '/'
-                );
+            $comments_qs = new midgard_query_storage('com_meego_comments_comment');
+            $comments_q = new midgard_query_select($comments_qs);
+            $comments_q->set_constraint(
+                new midgard_query_constraint(
+                    new midgard_query_property('up', $comments_qs),
+                    '=',
+                    new midgard_query_value($packages[0]->guid)
+                )
+            );
+            $comments_q->execute();
 
-                $ocs->writeElement('previewpic' . $counter, $package[0]->screenshoturl);
-                $ocs->writeElement('smallpreviewpic' . $counter, $package[0]->smallscreenshoturl);
-
-                if ($counter == 3)
-                    break;
-            }
-
-            // Comments
-            $qs = new midgard_query_storage('com_meego_comments_comment');
-            $qb = new midgard_query_select($qs);
-            $qb->set_constraint(new midgard_query_constraint(new midgard_query_property('up', $qs), '=', new midgard_query_value($package[0]->guid)));
-            $qb->execute();
-            $ocs->writeElement('comments', $qb->get_results_count());
-
-            $ocs->endElement(); //content
+            $ocs->writeContent($packages[0], $packages[0]->list_attachments(), $comments_q->get_results_count());
         }
         else // item not found
         {
-            $ocs->writeMeta($cnt,'content not found','ok',101);
+            $ocs->writeMeta($cnt, 'content not found', 'ok', 101);
+
             $ocs->startElement('data');
+            $ocs->endElement(); // data
         }
 
-        $ocs->endElement(); // data
         $ocs->endDocument();
 
         self::output_xml($ocs);
