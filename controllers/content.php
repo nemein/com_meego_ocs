@@ -63,11 +63,11 @@ class com_meego_ocs_controllers_content
         $cnt = $q->get_results_count();
 
         $ocs = new com_meego_ocs_OCSWriter();
-        $ocs->writeMeta($cnt);
-        $ocs->startElement('data');
 
         if ($cnt > 0)
         {
+            $ocs->writeMeta($cnt);
+            $ocs->startElement('data');
             $package = $q->list_objects();
 
             $ocs->startElement('content');
@@ -124,6 +124,11 @@ class com_meego_ocs_controllers_content
             $ocs->writeElement('comments', $qb->get_results_count());
 
             $ocs->endElement(); //content
+        }
+        else // item not found
+        {
+            $ocs->writeMeta($cnt,'content not found','ok',101);
+            $ocs->startElement('data');
         }
 
         $ocs->endElement(); // data
