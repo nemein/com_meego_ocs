@@ -36,11 +36,13 @@ class com_meego_ocs_OCSWriter extends XMLWriter
         $this->endElement(); // data
     }
 
-    public function writeContent($package, $attachments, $comments_count)
+    public function writeContent($packages)
     {
         $this->startElement('data');
-        $this->startElement('content');
 
+        foreach ($packages as $package)
+        {
+        $this->startElement('content');
         $this->writeAttribute('details','full');
         $this->writeElement('id',            $package->id);
         $this->writeElement('name',          $package->name);
@@ -54,7 +56,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
         $dispatcher = midgardmvc_core::get_instance()->dispatcher;
 
         $counter = 0;
-        foreach ($attachments as $attachment)
+        foreach ($package->attachments as $attachment)
         {
             $counter++;
             $package->screenshoturl = $dispatcher->generate_url(
@@ -84,8 +86,9 @@ class com_meego_ocs_OCSWriter extends XMLWriter
                 break;
         }
 
-        $this->writeElement('comments', $comments_count);
+        $this->writeElement('comments', $package->comments_count);
         $this->endElement(); //content
+        }
         $this->endElement(); // data
     }
 }

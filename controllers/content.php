@@ -50,7 +50,20 @@ class com_meego_ocs_controllers_content
     {
         $storage = new midgard_query_storage('com_meego_package');
         $q = new midgard_query_select($storage);
-        $q->set_constraint(new midgard_query_constraint(new midgard_query_property('id', $storage), '=', new midgard_query_value($args['id'])));
+
+        $query = $this->request->get_query();
+        if (count($query))
+        {
+            if (isset($query['search']))
+            {
+                $q->set_constraint(new midgard_query_constraint(new midgard_query_property('name', $storage), 'LIKE', new midgard_query_value('%' . $query['search'] .'%')));
+            }
+        }
+        if (isset($args['id']))
+        {
+            $q->set_constraint(new midgard_query_constraint(new midgard_query_property('id', $storage), '=', new midgard_query_value($args['id'])));
+        }
+
         $q->execute();
 
         $cnt = $q->get_results_count();
@@ -63,18 +76,22 @@ class com_meego_ocs_controllers_content
 
             $packages = $q->list_objects();
 
-            $comments_qs = new midgard_query_storage('com_meego_comments_comment');
-            $comments_q = new midgard_query_select($comments_qs);
-            $comments_q->set_constraint(
-                new midgard_query_constraint(
-                    new midgard_query_property('up', $comments_qs),
-                    '=',
-                    new midgard_query_value($packages[0]->guid)
-                )
-            );
-            $comments_q->execute();
+            foreach ($packages as $package){
+                $comments_qs = new midgard_query_storage('com_meego_comments_comment');
+                $comments_q = new midgard_query_select($comments_qs);
+                $comments_q->set_constraint(
+                    new midgard_query_constraint(
+                        new midgard_query_property('up', $comments_qs),
+                        '=',
+                        new midgard_query_value($packages[0]->guid)
+                    )
+                );
+                $comments_q->execute();
+                $package->comments_count = $comments_q->get_results_count();
 
-            $ocs->writeContent($packages[0], $packages[0]->list_attachments(), $comments_q->get_results_count());
+                $package->attachments = $package->list_attachments();
+            }
+            $ocs->writeContent($packages);
         }
         else // item not found
         {

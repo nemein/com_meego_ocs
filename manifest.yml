@@ -23,10 +23,10 @@ routes:
 #        path: /v1/content/homepagetypes
 #        controller: com_meego_ocs_controllers_content
 #        action: homepagetypes
-#    content_list:
-#        path: /v1/content/data
-#        controller: com_meego_ocs_controllers_content
-#        action: data
+    content_list:
+        path: /v1/content/data
+        controller: com_meego_ocs_controllers_content
+        action: data
     content_get:
         path: /v1/content/data/{$id}
         controller: com_meego_ocs_controllers_content
