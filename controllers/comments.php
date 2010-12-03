@@ -65,24 +65,39 @@ class com_meego_ocs_controllers_comments
         $comments = $q->list_objects();
 
         $ocs->startElement('data');
-        foreach ($comments as $comment)
+        $comments_tree = array();
+        foreach ($comments_tree as $comment)
         {
-            $ocs->startElement('comment');
-            $ocs->writeElement('id', $comment->id);
-            $ocs->writeElement('subject', $comment->title);
-            $ocs->writeElement('text', $comment->content);
-            // TODO: Implement comment replies
-            $ocs->writeElement('childcount', 0);
-            // TODO: Get from the joined table
-            $ocs->writeElement('user', '');
-            $ocs->writeElement('date', $comment->metadata->created->format('c'));
-            $ocs->writeElement('score', $comment->metadata->score);
-            $ocs->endElement(); 
+            $this->comment_to_ocs($comment, $ocs);
         }
         $ocs->endElement();
         $ocs->endDocument();
 
         self::output_xml($ocs);
+    }
+
+    private function comment_to_ocs(com_meego_comments_comment $comment, com_meego_ocs_OCSWriter $ocs)
+    {
+        $ocs->startElement('comment');
+        $ocs->writeElement('id', $comment->id);
+        $ocs->writeElement('subject', $comment->title);
+        $ocs->writeElement('text', $comment->content);
+        $comments = count($comment->subcomments);
+        $ocs->writeElement('childcount', $comments);
+        if ($comments > 0)
+        {
+            $ocs->startElement('children');
+            foreach ($comment->subcomments as $subcomment)
+            {
+                $this->comment_to_ocs($subcomment, $ocs);
+            }
+            $ocs->endElement();
+        }
+        
+        $ocs->writeElement('user', '');
+        $ocs->writeElement('date', $comment->metadata->created->format('c'));
+        $ocs->writeElement('score', $comment->metadata->score);
+        $ocs->endElement();
     }
 
     public function post_add(array $args)
@@ -117,6 +132,19 @@ class com_meego_ocs_controllers_comments
         $primary->get_by_id((int) $_POST['content']);
 
         $comment = new com_meego_comments_comment();
+
+        if (   isset($_POST['parent'])
+            && !empty($_POST['parent']))
+        {
+            $parent = new com_meego_comments_comment();
+            $parent->get_by_id((int) $_POST['parent']);
+            if ($parent->to != $primary->guid)
+            {
+                throw new midgardmvc_exception_notfound("Parent comment is not related to the content item");
+            }
+            $comment->up = $parent->id;
+        }
+
         $comment->to = $primary->guid;
         $comment->content = $_POST['message'];
 
