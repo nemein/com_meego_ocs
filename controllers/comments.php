@@ -30,11 +30,12 @@ class com_meego_ocs_controllers_comments
         (
             new midgard_query_constraint
             (
-                new midgard_query_property('to', $storage), 
+                new midgard_query_property('to', $storage),
                 '=',
                 new midgard_query_value($primary->guid)
             )
         );
+
         $q->add_order(new midgard_query_property('metadata.created', $storage), SORT_ASC);
 
         $ocs = new com_meego_ocs_OCSWriter();
@@ -62,24 +63,101 @@ class com_meego_ocs_controllers_comments
 
         $q->execute();
         $comments = $q->list_objects();
+
         $ocs->startElement('data');
-        foreach ($comments as $comment)
+        $comments_tree = array();
+        foreach ($comments_tree as $comment)
         {
-            $ocs->startElement('comment');
-            $ocs->writeElement('id', $comment->id);
-            $ocs->writeElement('subject', $comment->title);
-            $ocs->writeElement('text', $comment->content);
-            // TODO: Implement comment replies
-            $ocs->writeElement('childcount', 0);
-            // TODO: Get from the joined table
-            $ocs->writeElement('user', '');
-            $ocs->writeElement('date', $comment->metadata->created->format('c'));
-            $ocs->writeElement('score', $comment->metadata->score);
-            $ocs->endElement(); 
+            $this->comment_to_ocs($comment, $ocs);
         }
         $ocs->endElement();
         $ocs->endDocument();
 
+        self::output_xml($ocs);
+    }
+
+    private function comment_to_ocs(com_meego_comments_comment $comment, com_meego_ocs_OCSWriter $ocs)
+    {
+        $ocs->startElement('comment');
+        $ocs->writeElement('id', $comment->id);
+        $ocs->writeElement('subject', $comment->title);
+        $ocs->writeElement('text', $comment->content);
+        $comments = count($comment->subcomments);
+        $ocs->writeElement('childcount', $comments);
+        if ($comments > 0)
+        {
+            $ocs->startElement('children');
+            foreach ($comment->subcomments as $subcomment)
+            {
+                $this->comment_to_ocs($subcomment, $ocs);
+            }
+            $ocs->endElement();
+        }
+        
+        $ocs->writeElement('user', '');
+        $ocs->writeElement('date', $comment->metadata->created->format('c'));
+        $ocs->writeElement('score', $comment->metadata->score);
+        $ocs->endElement();
+    }
+
+    public function post_add(array $args)
+    {
+        // Commenting requires basic auth
+        $basic_auth = new midcom_core_services_authentication_basic();
+        $e = new Exception("Comment posting requires Basic authentication");
+        $basic_auth->handle_exception($e);
+
+        $required_params = array
+        (
+            'type',
+            'content',
+            'message',
+        );
+
+        foreach ($required_params as $param)
+        {
+            if (   !isset($_POST[$param])
+                || empty($_POST[$param]))
+            {
+                throw new midgardmvc_exception_notfound("Required parameter {$param} missing");
+            }
+        }
+
+        if ($_POST['type'] != 1)
+        {
+            throw new midgardmvc_exception_notfound("Only CONTENT type supported");
+        }
+
+        $primary = new com_meego_package();
+        $primary->get_by_id((int) $_POST['content']);
+
+        $comment = new com_meego_comments_comment();
+
+        if (   isset($_POST['parent'])
+            && !empty($_POST['parent']))
+        {
+            $parent = new com_meego_comments_comment();
+            $parent->get_by_id((int) $_POST['parent']);
+            if ($parent->to != $primary->guid)
+            {
+                throw new midgardmvc_exception_notfound("Parent comment is not related to the content item");
+            }
+            $comment->up = $parent->id;
+        }
+
+        $comment->to = $primary->guid;
+        $comment->content = $_POST['message'];
+
+        if (   isset($_POST['subject'])
+            && !empty($_POST['subject']))
+        {
+            $comment->title = $_POST['subject'];
+        }
+
+        $comment->create();
+
+        $ocs = new com_meego_ocs_OCSWriter();
+        $ocs->writeMeta(0);
         self::output_xml($ocs);
     }
 
