@@ -78,6 +78,26 @@ class com_meego_ocs_controllers_content
             $ocs->writeElement('description', $package[0]->description);
             $ocs->writeElement('summary', $package[0]->summary);
             $ocs->writeElement('homepage', $package[0]->url);
+            $ocs->writeElement('created', $package[0]->metadata->created);
+            $ocs->writeElement('changed', $package[0]->metadata->revised);
+
+            $qs = new midgard_query_storage('midgard_attachment');
+            $qb = new midgard_query_select($qs);
+            $qb->set_constraint(new midgard_query_constraint(new midgard_query_property('parentguid', $qs), '=', new midgard_query_value($package[0]->guid)));
+            $qb->execute();
+            if ($qb->get_results_count())
+            {
+                $counter = 0;
+                foreach($qb->list_objects() as $attachment)
+                {
+                    $counter++;
+                    $ocs->writeElement('previewpic' . $counter, "TODO: Add actual url.");
+
+                    if ($counter == 3)
+                        break;
+                }
+            }
+
             $ocs->endElement(); //content
         }
 
