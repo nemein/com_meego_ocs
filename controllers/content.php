@@ -106,8 +106,6 @@ class com_meego_ocs_controllers_content
 
         if ($cnt > 0)
         {
-            $ocs->writeMeta($cnt);
-
             $packages = $q->list_objects();
 
             foreach ($packages as $package){
@@ -125,14 +123,14 @@ class com_meego_ocs_controllers_content
 
                 $package->attachments = $package->list_attachments();
             }
+
+            $ocs->writeMeta($cnt);
             $ocs->writeContent($packages);
         }
         else // item not found
         {
             $ocs->writeMeta($cnt, 'content not found', 'ok', 101);
-
-            $ocs->startElement('data');
-            $ocs->endElement(); // data
+            $ocs->writeEmptyData();
         }
 
         $ocs->endDocument();

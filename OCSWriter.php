@@ -105,4 +105,10 @@ class com_meego_ocs_OCSWriter extends XMLWriter
 
         $this->endElement(); // data
     }
+
+    public function writeEmptyData()
+    {
+        $ocs->startElement('data');
+        $ocs->endElement(); // data
+    }
 }
