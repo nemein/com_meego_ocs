@@ -91,4 +91,18 @@ class com_meego_ocs_OCSWriter extends XMLWriter
         }
         $this->endElement(); // data
     }
+
+    public function writeDistributions($list)
+    {
+        $this->startElement('data');
+
+        foreach ($list as $obj) {
+            $this->startElement('distribution');
+            $this->writeElement('id', $obj->id);
+            $this->writeElement('name', $obj->name);
+            $this->endElement(); // distribution
+        }
+
+        $this->endElement(); // data
+    }
 }

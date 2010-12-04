@@ -31,16 +31,7 @@ class com_meego_ocs_controllers_content
 
         $ocs = new com_meego_ocs_OCSWriter();
         $ocs->writeMeta($q->get_results_count());
-
-        $ocs->startElement('data');
-        foreach ($q->list_objects() as $obj) {
-            $ocs->startElement('distribution');
-            $ocs->writeElement('id', $obj->id);
-            $ocs->writeElement('name', $obj->name);
-            $ocs->endElement(); // distribution
-        }
-        $ocs->endElement(); // data
-
+        $ocs->writeDistributions($q->list_objects());
         $ocs->endDocument();
 
         self::output_xml($ocs);
