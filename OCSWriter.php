@@ -42,52 +42,52 @@ class com_meego_ocs_OCSWriter extends XMLWriter
 
         foreach ($packages as $package)
         {
-        $this->startElement('content');
-        $this->writeAttribute('details','full');
-        $this->writeElement('id',            $package->id);
-        $this->writeElement('name',          $package->name);
-        $this->writeElement('version',       $package->version);
-        $this->writeElement('description',   $package->description);
-        $this->writeElement('summary',       $package->summary);
-        $this->writeElement('homepage',      $package->url);
-        $this->writeElement('created',       $package->metadata->created);
-        $this->writeElement('changed',       $package->metadata->revised);
+            $this->startElement('content');
+            $this->writeAttribute('details','full');
+            $this->writeElement('id',            $package->id);
+            $this->writeElement('name',          $package->name);
+            $this->writeElement('version',       $package->version);
+            $this->writeElement('description',   $package->description);
+            $this->writeElement('summary',       $package->summary);
+            $this->writeElement('homepage',      $package->url);
+            $this->writeElement('created',       $package->metadata->created);
+            $this->writeElement('changed',       $package->metadata->revised);
 
-        $dispatcher = midgardmvc_core::get_instance()->dispatcher;
+            $dispatcher = midgardmvc_core::get_instance()->dispatcher;
 
-        $counter = 0;
-        foreach ($package->attachments as $attachment)
-        {
-            $counter++;
-            $package->screenshoturl = $dispatcher->generate_url(
-                'attachmentserver_variant',
-                array(
-                    'guid' => $attachment->guid,
-                    'variant' => 'sidesquare',
-                    'filename' => $attachment->name,
-                ),
-                '/'
-            );
+            $counter = 0;
+            foreach ($package->attachments as $attachment)
+            {
+                $counter++;
+                $_screenshoturl = $dispatcher->generate_url(
+                    'attachmentserver_variant',
+                    array(
+                        'guid' => $attachment->guid,
+                        'variant' => 'sidesquare',
+                        'filename' => $attachment->name,
+                    ),
+                    '/'
+                );
 
-            $package->smallscreenshoturl = $dispatcher->generate_url(
-                'attachmentserver_variant',
-                array(
-                    'guid' => $attachment->guid,
-                    'variant' => 'thumbnail',
-                    'filename' => $attachment->name,
-                ),
-                '/'
-            );
+                $_smallscreenshoturl = $dispatcher->generate_url(
+                    'attachmentserver_variant',
+                    array(
+                        'guid' => $attachment->guid,
+                        'variant' => 'thumbnail',
+                        'filename' => $attachment->name,
+                    ),
+                    '/'
+                );
 
-            $this->writeElement('previewpic'.$counter,      $package->screenshoturl);
-            $this->writeElement('smallpreviewpic'.$counter, $package->smallscreenshoturl);
+                $this->writeElement('previewpic'.$counter,      $_screenshoturl);
+                $this->writeElement('smallpreviewpic'.$counter, $_smallscreenshoturl);
 
-            if ($counter == 3)
-                break;
-        }
+                if ($counter == 3)
+                    break;
+            }
 
-        $this->writeElement('comments', $package->comments_count);
-        $this->endElement(); //content
+            $this->writeElement('comments', $package->comments_count);
+            $this->endElement(); //content
         }
         $this->endElement(); // data
     }
