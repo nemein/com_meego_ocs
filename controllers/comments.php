@@ -45,23 +45,12 @@ class com_meego_ocs_controllers_comments
         $cnt = $q->get_results_count();
         $ocs->writeMeta($cnt);
 
-        $query = $this->request->get_query();
-        $page = 0;
-        if (isset($query['page']))
-        {
-            $page = $query['page'];
-        }
+        list($limit, $offset) = $this->limit_and_offset_from_query();
 
-        $pagesize = midgardmvc_core::get_instance()->configuration->list_pagesize;
-        if (isset($query['pagesize']))
-        {
-            $pagesize = $query['pagesize'];
-        }
-
-        $q->set_limit($pagesize);
-        $q->set_offset($page * $pagesize);
-
+        $q->set_limit($limit);
+        $q->set_offset($offset);
         $q->execute();
+
         $comments = $q->list_objects();
 
         $ocs->startElement('data');
@@ -74,6 +63,25 @@ class com_meego_ocs_controllers_comments
         $ocs->endDocument();
 
         self::output_xml($ocs);
+    }
+
+    protected function limit_and_offset_from_query()
+    {
+        $query = $this->request->get_query();
+
+        $page = 0;
+        if (isset($query['page']))
+        {
+            $page = $query['page'];
+        }
+
+        $pagesize = midgardmvc_core::get_instance()->configuration->list_pagesize;
+        if (isset($query['pagesize']))
+        {
+            $pagesize = $query['pagesize'];
+        }
+
+        return array($pagesize, $page * $pagesize);
     }
 
     private function comment_to_ocs(com_meego_comments_comment $comment, com_meego_ocs_OCSWriter $ocs)
