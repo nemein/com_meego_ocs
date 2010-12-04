@@ -16,13 +16,13 @@ class com_meego_ocs_controllers_comments
             throw new midgardmvc_exception_notfound("Only CONTENT type supported");
         }
 
-        $primary = new com_meego_package();
-        $primary->get_by_id((int) $args['contentid1']);
-
         if ($args['contentid2'] != 0)
         {
             throw new midgardmvc_exception_notfound("No subcontent available");
         }
+
+        $primary = new com_meego_package();
+        $primary->get_by_id((int) $args['contentid1']);
 
         $storage = new midgard_query_storage('com_meego_comments_comment');
         $q = new midgard_query_select($storage);
