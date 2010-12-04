@@ -49,12 +49,12 @@ class com_meego_ocs_controllers_comments
         $q->execute();
 
         $comments = $q->list_objects();
+        $comments_tree = array(); // <-- FIXME
 
         $ocs = new com_meego_ocs_OCSWriter();
         $ocs->writeMeta($cnt);
 
         $ocs->startElement('data');
-        $comments_tree = array();
         foreach ($comments_tree as $comment)
         {
             $this->comment_to_ocs($comment, $ocs);
