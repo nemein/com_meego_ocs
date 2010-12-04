@@ -38,12 +38,9 @@ class com_meego_ocs_controllers_comments
 
         $q->add_order(new midgard_query_property('metadata.created', $storage), SORT_ASC);
 
-        $ocs = new com_meego_ocs_OCSWriter();
-
         // First run a query of the whole set to get results count
         $q->execute();
         $cnt = $q->get_results_count();
-        $ocs->writeMeta($cnt);
 
         list($limit, $offset) = $this->limit_and_offset_from_query();
 
@@ -53,6 +50,9 @@ class com_meego_ocs_controllers_comments
 
         $comments = $q->list_objects();
 
+        $ocs = new com_meego_ocs_OCSWriter();
+        $ocs->writeMeta($cnt);
+
         $ocs->startElement('data');
         $comments_tree = array();
         foreach ($comments_tree as $comment)
@@ -60,6 +60,7 @@ class com_meego_ocs_controllers_comments
             $this->comment_to_ocs($comment, $ocs);
         }
         $ocs->endElement();
+
         $ocs->endDocument();
 
         self::output_xml($ocs);
@@ -166,6 +167,7 @@ class com_meego_ocs_controllers_comments
 
         $ocs = new com_meego_ocs_OCSWriter();
         $ocs->writeMeta(0);
+        $ocs->endDocument();
         self::output_xml($ocs);
     }
 
