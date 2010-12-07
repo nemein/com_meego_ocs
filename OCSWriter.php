@@ -87,6 +87,11 @@ class com_meego_ocs_OCSWriter extends XMLWriter
             }
 
             $this->writeElement('comments', $package->comments_count);
+            if (isset($package->commentsurl))
+            {
+                $this->writeElement('commentspage', $package->commentsurl);
+            }
+
             $this->endElement(); //content
         }
         $this->endElement(); // data
