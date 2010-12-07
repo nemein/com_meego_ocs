@@ -62,6 +62,16 @@ class com_meego_ocs_controllers_content
 
                 $q->set_constraint($group_constraint);
             }
+            if (isset($query['categories']))
+            {
+                $q->set_constraint(
+                    new midgard_query_constraint(
+                        new midgard_query_property('category', $storage),
+                        'IN',
+                        new midgard_query_value(explode('x',$query['categories']))
+                    )
+                );
+            }
             if (isset($query['distribution']))
             {
                 $q->set_constraint(
@@ -135,6 +145,23 @@ class com_meego_ocs_controllers_content
                 $package->comments_count = $comments_q->get_results_count();
 
                 $package->attachments = $package->list_attachments();
+
+                $repository = new com_meego_repository($package->repository);
+
+                if (isset($args['id']))
+                {
+                    $package->commentsurl = midgardmvc_core::get_instance()->dispatcher->generate_url
+                    (
+                        'package_instance',
+                        array
+                        (
+                            'package' => $package->name,
+                            'version' => $package->version,
+                            'repository' => $repository->name,
+                        ),
+                        'com_meego_packages'
+                    );
+                }
             }
 
             $ocs->writeMeta($cnt);
