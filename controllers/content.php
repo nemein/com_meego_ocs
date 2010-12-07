@@ -169,7 +169,7 @@ class com_meego_ocs_controllers_content
         }
         else // item not found
         {
-            $ocs->writeMeta($cnt, 'content not found', 'ok', 101);
+            $ocs->writeMeta($cnt, 'content not found', 'failed', 101);
             $ocs->writeEmptyData();
         }
 
