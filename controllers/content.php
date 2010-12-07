@@ -47,13 +47,20 @@ class com_meego_ocs_controllers_content
         {
             if (isset($query['search']))
             {
-                $q->set_constraint(
-                    new midgard_query_constraint(
-                        new midgard_query_property('name', $storage),
-                        'LIKE',
-                        new midgard_query_value('%' . $query['search'] .'%')
-                    )
-                );
+                $cnstr1 = new midgard_query_constraint(
+                                new midgard_query_property('name', $storage),
+                                'LIKE',
+                                new midgard_query_value('%' . $query['search'] .'%')
+                              );
+                $cnstr2 = new midgard_query_constraint(
+                                new midgard_query_property('title', $storage),
+                                'LIKE',
+                                new midgard_query_value('%' . $query['search'] .'%')
+                              );
+
+                $group_constraint = new midgard_query_constraint_group ("OR", $cnstr1, $cnstr2);
+
+                $q->set_constraint($group_constraint);
             }
             if (isset($query['distribution']))
             {
@@ -95,7 +102,13 @@ class com_meego_ocs_controllers_content
         }
         if (isset($args['id']))
         {
-            $q->set_constraint(new midgard_query_constraint(new midgard_query_property('id', $storage), '=', new midgard_query_value($args['id'])));
+            $q->set_constraint(
+                new midgard_query_constraint(
+                    new midgard_query_property('id', $storage),
+                    '=',
+                    new midgard_query_value($args['id'])
+                )
+            );
         }
 
         $q->execute();
