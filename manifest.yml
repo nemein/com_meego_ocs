@@ -3,6 +3,13 @@ requires:
     com_meego_packages:
         - {type: github, user: nemein, repository: com_meego_packages, branch: master}
 routes:
+    ocs_providers:
+        path: /providers.xml
+        controller: com_meego_ocs_controllers_providers
+        action: index
+        template_aliases:
+            root: cmo-show-index
+        mimetype: application/xml
     content_categories:
         path: /v1/content/categories
         controller: com_meego_ocs_controllers_content
