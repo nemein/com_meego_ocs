@@ -61,7 +61,7 @@ class com_meego_ocs_controllers_content
                     new midgard_query_constraint(
                         new midgard_query_property('repository', $storage),
                         'IN',
-                        new midgard_query_value(explode('x',$query['distribution']))
+                        new midgard_query_value(explode(',',$query['distribution']))
                     )
                 );
             }
