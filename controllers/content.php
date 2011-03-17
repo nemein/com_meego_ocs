@@ -109,6 +109,18 @@ class com_meego_ocs_controllers_content
                                   break;
                 }
             }
+            $pagesize = 100;
+            if (isset($query['pagesize']))
+            {
+                $pagesize = $query['pagesize'];
+            }
+            $q->set_limit($query['pagesize']);
+            $page = 0;
+            if (isset($query['page']))
+            {
+                $page = $query['page'];
+            }
+            $q->set_offset($page * $pagesize);
         }
         if (isset($args['id']))
         {
