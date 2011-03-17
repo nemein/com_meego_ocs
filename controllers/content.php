@@ -114,7 +114,7 @@ class com_meego_ocs_controllers_content
             {
                 $pagesize = $query['pagesize'];
             }
-            $q->set_limit($query['pagesize']);
+            $q->set_limit($pagesize);
             $page = 0;
             if (isset($query['page']))
             {
