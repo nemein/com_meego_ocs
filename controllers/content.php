@@ -45,15 +45,16 @@ class com_meego_ocs_controllers_content
         $query = $this->request->get_query();
         if (count($query))
         {
-            if (isset($query['search']))
+            if (   array_key_exists('search', $query)
+                && strlen($query['search']))
             {
                 $cnstr1 = new midgard_query_constraint(
-                                new midgard_query_property('name', $storage),
+                                new midgard_query_property('name'),
                                 'LIKE',
                                 new midgard_query_value('%' . $query['search'] .'%')
                               );
                 $cnstr2 = new midgard_query_constraint(
-                                new midgard_query_property('title', $storage),
+                                new midgard_query_property('title'),
                                 'LIKE',
                                 new midgard_query_value('%' . $query['search'] .'%')
                               );
@@ -62,43 +63,46 @@ class com_meego_ocs_controllers_content
 
                 $q->set_constraint($group_constraint);
             }
-            if (isset($query['categories']))
+            if (   array_key_exists('categories', $query)
+                && strlen($query['categories']))
             {
                 $q->set_constraint(
                     new midgard_query_constraint(
-                        new midgard_query_property('category', $storage),
+                        new midgard_query_property('category'),
                         'IN',
                         new midgard_query_value(explode('x',$query['categories']))
                     )
                 );
             }
-            if (isset($query['distribution']))
+            if (   array_key_exists('distribution', $query)
+                && strlen($query['distribution']))
             {
                 $q->set_constraint(
                     new midgard_query_constraint(
-                        new midgard_query_property('repository', $storage),
+                        new midgard_query_property('repository'),
                         'IN',
                         new midgard_query_value(explode(',',$query['distribution']))
                     )
                 );
             }
-            if (isset($query['sortmode']))
+            if (   array_key_exists('sortmode', $query)
+                && strlen($query['sortmode']))
             {
                 switch ($query['sortmode'])
                 {
                     case 'new'  :
                                   $q->add_order(
-                                      new midgard_query_property('metadata.revised', $storage),
+                                      new midgard_query_property('metadata.revised'),
                                       SORT_DESC);
                                   break;
                     case 'alpha':
                                   $q->add_order(
-                                      new midgard_query_property('name', $storage),
+                                      new midgard_query_property('name'),
                                       SORT_ASC);
                                   break;
                     case 'high' :
                                   $q->add_order(
-                                      new midgard_query_property('metadata.score', $storage),
+                                      new midgard_query_property('metadata.score'),
                                       SORT_DESC);
                                   break;
                     case 'down' :
@@ -110,13 +114,16 @@ class com_meego_ocs_controllers_content
                 }
             }
             $pagesize = 100;
-            if (isset($query['pagesize']))
+            if (   array_key_exists('pagesize', $query)
+                && strlen($query['pagesize']))
             {
                 $pagesize = $query['pagesize'];
             }
             $q->set_limit($pagesize);
             $page = 0;
-            if (isset($query['page']))
+
+            if (   array_key_exists('page', $query)
+                && strlen($query['page']))
             {
                 $page = $query['page'];
             }
@@ -126,7 +133,7 @@ class com_meego_ocs_controllers_content
         {
             $q->set_constraint(
                 new midgard_query_constraint(
-                    new midgard_query_property('id', $storage),
+                    new midgard_query_property('id'),
                     '=',
                     new midgard_query_value($args['id'])
                 )
@@ -136,7 +143,6 @@ class com_meego_ocs_controllers_content
         $q->execute();
 
         $cnt = $q->get_results_count();
-
         $ocs = new com_meego_ocs_OCSWriter();
 
         if ($cnt > 0)
@@ -148,7 +154,7 @@ class com_meego_ocs_controllers_content
                 $comments_q = new midgard_query_select($comments_qs);
                 $comments_q->set_constraint(
                     new midgard_query_constraint(
-                        new midgard_query_property('up', $comments_qs),
+                        new midgard_query_property('up'),
                         '=',
                         new midgard_query_value($packages[0]->guid)
                     )
@@ -169,7 +175,9 @@ class com_meego_ocs_controllers_content
                         (
                             'package' => $package->name,
                             'version' => $package->version,
-                            'repository' => $repository->name,
+                            'project' => $package->project,
+                            'repository' => $package->repository,
+                            'arch' => $repository->arch
                         ),
                         'com_meego_packages'
                     );
