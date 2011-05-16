@@ -169,7 +169,9 @@ class com_meego_ocs_controllers_content
                         (
                             'package' => $package->name,
                             'version' => $package->version,
-                            'repository' => $repository->name,
+                            'project' => $package->project,
+                            'repository' => $package->repository,
+                            'arch' => $repository->arch
                         ),
                         'com_meego_packages'
                     );
