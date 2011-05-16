@@ -48,12 +48,12 @@ class com_meego_ocs_controllers_content
             if (isset($query['search']))
             {
                 $cnstr1 = new midgard_query_constraint(
-                                new midgard_query_property('name', $storage),
+                                new midgard_query_property('name'),
                                 'LIKE',
                                 new midgard_query_value('%' . $query['search'] .'%')
                               );
                 $cnstr2 = new midgard_query_constraint(
-                                new midgard_query_property('title', $storage),
+                                new midgard_query_property('title'),
                                 'LIKE',
                                 new midgard_query_value('%' . $query['search'] .'%')
                               );
@@ -66,7 +66,7 @@ class com_meego_ocs_controllers_content
             {
                 $q->set_constraint(
                     new midgard_query_constraint(
-                        new midgard_query_property('category', $storage),
+                        new midgard_query_property('category'),
                         'IN',
                         new midgard_query_value(explode('x',$query['categories']))
                     )
@@ -76,7 +76,7 @@ class com_meego_ocs_controllers_content
             {
                 $q->set_constraint(
                     new midgard_query_constraint(
-                        new midgard_query_property('repository', $storage),
+                        new midgard_query_property('repository'),
                         'IN',
                         new midgard_query_value(explode(',',$query['distribution']))
                     )
@@ -88,17 +88,17 @@ class com_meego_ocs_controllers_content
                 {
                     case 'new'  :
                                   $q->add_order(
-                                      new midgard_query_property('metadata.revised', $storage),
+                                      new midgard_query_property('metadata.revised'),
                                       SORT_DESC);
                                   break;
                     case 'alpha':
                                   $q->add_order(
-                                      new midgard_query_property('name', $storage),
+                                      new midgard_query_property('name'),
                                       SORT_ASC);
                                   break;
                     case 'high' :
                                   $q->add_order(
-                                      new midgard_query_property('metadata.score', $storage),
+                                      new midgard_query_property('metadata.score'),
                                       SORT_DESC);
                                   break;
                     case 'down' :
@@ -126,7 +126,7 @@ class com_meego_ocs_controllers_content
         {
             $q->set_constraint(
                 new midgard_query_constraint(
-                    new midgard_query_property('id', $storage),
+                    new midgard_query_property('id'),
                     '=',
                     new midgard_query_value($args['id'])
                 )
@@ -148,7 +148,7 @@ class com_meego_ocs_controllers_content
                 $comments_q = new midgard_query_select($comments_qs);
                 $comments_q->set_constraint(
                     new midgard_query_constraint(
-                        new midgard_query_property('up', $comments_qs),
+                        new midgard_query_property('up'),
                         '=',
                         new midgard_query_value($packages[0]->guid)
                     )
