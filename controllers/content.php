@@ -45,7 +45,8 @@ class com_meego_ocs_controllers_content
         $query = $this->request->get_query();
         if (count($query))
         {
-            if (isset($query['search']))
+            if (   array_key_exists('search', $query)
+                && strlen($query['search']))
             {
                 $cnstr1 = new midgard_query_constraint(
                                 new midgard_query_property('name'),
@@ -62,7 +63,8 @@ class com_meego_ocs_controllers_content
 
                 $q->set_constraint($group_constraint);
             }
-            if (isset($query['categories']))
+            if (   array_key_exists('categories', $query)
+                && strlen($query['categories']))
             {
                 $q->set_constraint(
                     new midgard_query_constraint(
@@ -72,7 +74,8 @@ class com_meego_ocs_controllers_content
                     )
                 );
             }
-            if (isset($query['distribution']))
+            if (   array_key_exists('distribution', $query)
+                && strlen($query['distribution']))
             {
                 $q->set_constraint(
                     new midgard_query_constraint(
@@ -82,7 +85,8 @@ class com_meego_ocs_controllers_content
                     )
                 );
             }
-            if (isset($query['sortmode']))
+            if (   array_key_exists('sortmode', $query)
+                && strlen($query['sortmode']))
             {
                 switch ($query['sortmode'])
                 {
@@ -110,13 +114,16 @@ class com_meego_ocs_controllers_content
                 }
             }
             $pagesize = 100;
-            if (isset($query['pagesize']))
+            if (   array_key_exists('pagesize', $query)
+                && strlen($query['pagesize']))
             {
                 $pagesize = $query['pagesize'];
             }
             $q->set_limit($pagesize);
             $page = 0;
-            if (isset($query['page']))
+
+            if (   array_key_exists('page', $query)
+                && strlen($query['page']))
             {
                 $page = $query['page'];
             }
@@ -136,7 +143,6 @@ class com_meego_ocs_controllers_content
         $q->execute();
 
         $cnt = $q->get_results_count();
-
         $ocs = new com_meego_ocs_OCSWriter();
 
         if ($cnt > 0)
