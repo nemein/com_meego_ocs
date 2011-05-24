@@ -40,6 +40,8 @@ class com_meego_ocs_OCSWriter extends XMLWriter
     {
         $this->startElement('data');
 
+        $urlbase = midgardmvc_core::get_instance()->configuration->base_url;
+
         foreach ($packages as $package)
         {
             $this->startElement('content');
@@ -59,7 +61,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
             foreach ($package->attachments as $attachment)
             {
                 $counter++;
-                $_screenshoturl = $dispatcher->generate_url(
+                $_screenshoturl = $urlbase . $dispatcher->generate_url(
                     'attachmentserver_variant',
                     array(
                         'guid' => $attachment->guid,
@@ -69,7 +71,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
                     '/'
                 );
 
-                $_smallscreenshoturl = $dispatcher->generate_url(
+                $_smallscreenshoturl = $urlbase . $dispatcher->generate_url(
                     'attachmentserver_variant',
                     array(
                         'guid' => $attachment->guid,
