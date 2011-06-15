@@ -39,7 +39,7 @@ class com_meego_ocs_controllers_content
 
     public function get_data(array $args)
     {
-        $storage = new midgard_query_storage('com_meego_package');
+        $storage = new midgard_query_storage('com_meego_package_details');
         $q = new midgard_query_select($storage);
 
         $query = $this->request->get_query();
@@ -49,12 +49,12 @@ class com_meego_ocs_controllers_content
                 && strlen($query['search']))
             {
                 $cnstr1 = new midgard_query_constraint(
-                                new midgard_query_property('name'),
+                                new midgard_query_property('packagename'),
                                 'LIKE',
                                 new midgard_query_value('%' . $query['search'] .'%')
                               );
                 $cnstr2 = new midgard_query_constraint(
-                                new midgard_query_property('title'),
+                                new midgard_query_property('packagetitle'),
                                 'LIKE',
                                 new midgard_query_value('%' . $query['search'] .'%')
                               );
@@ -68,7 +68,7 @@ class com_meego_ocs_controllers_content
             {
                 $q->set_constraint(
                     new midgard_query_constraint(
-                        new midgard_query_property('category'),
+                        new midgard_query_property('basecategory'),
                         'IN',
                         new midgard_query_value(explode('x',$query['categories']))
                     )
@@ -79,7 +79,7 @@ class com_meego_ocs_controllers_content
             {
                 $q->set_constraint(
                     new midgard_query_constraint(
-                        new midgard_query_property('repository'),
+                        new midgard_query_property('repoid'),
                         'IN',
                         new midgard_query_value(explode(',',$query['distribution']))
                     )
@@ -92,17 +92,17 @@ class com_meego_ocs_controllers_content
                 {
                     case 'new'  :
                                   $q->add_order(
-                                      new midgard_query_property('metadata.revised'),
+                                      new midgard_query_property('packagerevised'),
                                       SORT_DESC);
                                   break;
                     case 'alpha':
                                   $q->add_order(
-                                      new midgard_query_property('name'),
+                                      new midgard_query_property('packagename'),
                                       SORT_ASC);
                                   break;
                     case 'high' :
                                   $q->add_order(
-                                      new midgard_query_property('metadata.score'),
+                                      new midgard_query_property('packagescore'),
                                       SORT_DESC);
                                   break;
                     case 'down' :
@@ -133,7 +133,7 @@ class com_meego_ocs_controllers_content
         {
             $q->set_constraint(
                 new midgard_query_constraint(
-                    new midgard_query_property('id'),
+                    new midgard_query_property('packageid'),
                     '=',
                     new midgard_query_value($args['id'])
                 )
@@ -156,15 +156,17 @@ class com_meego_ocs_controllers_content
                     new midgard_query_constraint(
                         new midgard_query_property('up'),
                         '=',
-                        new midgard_query_value($packages[0]->guid)
+                        new midgard_query_value($packages[0]->packageguid)
                     )
                 );
                 $comments_q->execute();
                 $package->comments_count = $comments_q->get_results_count();
 
-                $package->attachments = $package->list_attachments();
+                $origpackage = new com_meego_package($package->packageguid);
+                $package->attachments = $origpackage->list_attachments();
+                unset ($origpackage);
 
-                $repository = new com_meego_repository($package->repository);
+                $repository = new com_meego_repository($package->repoid);
 
                 if (isset($args['id']))
                 {
@@ -173,11 +175,11 @@ class com_meego_ocs_controllers_content
                         'package_instance',
                         array
                         (
-                            'package' => $package->name,
-                            'version' => $package->version,
-                            'project' => $package->project,
-                            'repository' => $package->repository,
-                            'arch' => $repository->arch
+                            'package' => $package->packagename,
+                            'version' => $package->packageversion,
+                            'project' => $package->repoproject,
+                            'repository' => $package->repoid,
+                            'arch' => $repository->repoarch
                         ),
                         'com_meego_packages'
                     );
