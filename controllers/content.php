@@ -11,7 +11,7 @@ class com_meego_ocs_controllers_content
 
     public function get_categories(array $args)
     {
-        $q = new midgard_query_select(new midgard_query_storage('com_meego_package_category'));
+        $q = new midgard_query_select(new midgard_query_storage('com_meego_package_basecategory'));
         $q->execute();
 
         $ocs = new com_meego_ocs_OCSWriter();
