@@ -180,7 +180,7 @@ class com_meego_ocs_controllers_content
                 $package->attachments = $origpackage->list_attachments();
                 unset ($origpackage);
 
-                // generate a URL to the package instance
+                // generate the URL of the package instance
                 $repository = new com_meego_repository($package->repoid);
 
                 if (isset($args['id']))
@@ -211,6 +211,67 @@ class com_meego_ocs_controllers_content
             $ocs->writeMeta($cnt, 'content not found', 'failed', 101);
             $ocs->writeEmptyData();
         }
+
+        $ocs->endDocument();
+
+        self::output_xml($ocs);
+    }
+
+    /**
+     * Gather licenses
+     * @param array HTTP GET arguments
+     */
+    public function get_licenses(array $args)
+    {
+        $q = new midgard_query_select(new midgard_query_storage('com_meego_package'));
+
+        // set page size
+        $pagesize = 100;
+
+        $query = $this->request->get_query();
+
+        if (   array_key_exists('pagesize', $query)
+            && strlen($query['pagesize']))
+        {
+            $pagesize = $query['pagesize'];
+        }
+
+        $q->set_limit($pagesize);
+        $page = 0;
+
+        if (   array_key_exists('page', $query)
+            && strlen($query['page']))
+        {
+            $page = $query['page'];
+        }
+
+        $q->set_offset($page * $pagesize);
+
+        $q->execute();
+
+        $ocs = new com_meego_ocs_OCSWriter();
+
+        $packages = $q->list_objects();
+        // to store the unique licenses
+        $licenses = array();
+
+        $id = 0;
+        foreach ($packages as $package)
+        {
+            if ( ! array_key_exists($package->license, $licenses))
+            {
+                $id++;
+                $licenses[$package->license] = array(
+                    'id' => $id,
+                    'name' => $package->license,
+                    /** @todo: write a subroutine which can fetch licenses based on their names or something **/
+                    'link' => 'N/A'
+                );
+            }
+        }
+
+        $ocs->writeMeta(count($licenses));
+        $ocs->writeLicenses($licenses);
 
         $ocs->endDocument();
 

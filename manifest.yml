@@ -14,10 +14,10 @@ routes:
         path: /v1/content/categories
         controller: com_meego_ocs_controllers_content
         action: categories
-#    content_licenses:
-#        path: /v1/content/licenses
-#        controller: com_meego_ocs_controllers_content
-#        action: licenses
+    content_licenses:
+        path: /v1/content/licenses
+        controller: com_meego_ocs_controllers_content
+        action: licenses
     content_distributions:
         path: /v1/content/distributions
         controller: com_meego_ocs_controllers_content

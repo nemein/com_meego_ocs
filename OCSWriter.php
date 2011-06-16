@@ -14,6 +14,9 @@ class com_meego_ocs_OCSWriter extends XMLWriter
         parent::endDocument();
     }
 
+    /**
+     * Dumps meta element
+     */
     public function writeMeta($totalitems, $message = '', $status = 'ok', $statuscode = '100')
     {
         $this->startElement('meta');
@@ -24,10 +27,14 @@ class com_meego_ocs_OCSWriter extends XMLWriter
         $this->endElement(); // meta
     }
 
+    /**
+     * Dumps category elements
+     */
     public function writeCategories($list)
     {
         $this->startElement('data');
-        foreach ($list as $obj) {
+        foreach ($list as $obj)
+        {
             $this->startElement('category');
             $this->writeElement('id', $obj->id);
             $this->writeElement('name', $obj->name);
@@ -36,6 +43,9 @@ class com_meego_ocs_OCSWriter extends XMLWriter
         $this->endElement(); // data
     }
 
+    /**
+     * Dumps content elements
+     */
     public function writeContent($packages)
     {
         $this->startElement('data');
@@ -99,11 +109,15 @@ class com_meego_ocs_OCSWriter extends XMLWriter
         $this->endElement(); // data
     }
 
+    /**
+     * Dumps distributions elements
+     */
     public function writeDistributions($list)
     {
         $this->startElement('data');
 
-        foreach ($list as $obj) {
+        foreach ($list as $obj)
+        {
             $this->startElement('distribution');
             $this->writeElement('id', $obj->id);
             $this->writeElement('name', $obj->name);
@@ -113,6 +127,28 @@ class com_meego_ocs_OCSWriter extends XMLWriter
         $this->endElement(); // data
     }
 
+    /**
+     * Dumps license elements
+     */
+    public function writeLicenses($list)
+    {
+        $this->startElement('data');
+
+        foreach ($list as $obj)
+        {
+            $this->startElement('licenses');
+            $this->writeElement('id', $obj['id']);
+            $this->writeElement('name', $obj['name']);
+            $this->writeElement('link', $obj['link']);
+            $this->endElement(); // distribution
+        }
+
+        $this->endElement(); // data
+    }
+
+    /**
+     * Dumps an empty data element
+     */
     public function writeEmptyData()
     {
         $this->startElement('data');
