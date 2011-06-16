@@ -43,6 +43,7 @@ class com_meego_ocs_controllers_content
         $q = new midgard_query_select($storage);
 
         $query = $this->request->get_query();
+
         if (count($query))
         {
             if (   array_key_exists('search', $query)
@@ -113,22 +114,8 @@ class com_meego_ocs_controllers_content
                                   break;
                 }
             }
-            $pagesize = 100;
-            if (   array_key_exists('pagesize', $query)
-                && strlen($query['pagesize']))
-            {
-                $pagesize = $query['pagesize'];
-            }
-            $q->set_limit($pagesize);
-            $page = 0;
-
-            if (   array_key_exists('page', $query)
-                && strlen($query['page']))
-            {
-                $page = $query['page'];
-            }
-            $q->set_offset($page * $pagesize);
         }
+
         if (isset($args['id']))
         {
             $q->set_constraint(
@@ -140,18 +127,42 @@ class com_meego_ocs_controllers_content
             );
         }
 
+        // set page size
+        $pagesize = 100;
+
+        if (   array_key_exists('pagesize', $query)
+            && strlen($query['pagesize']))
+        {
+            $pagesize = $query['pagesize'];
+        }
+
+        $q->set_limit($pagesize);
+        $page = 0;
+
+        if (   array_key_exists('page', $query)
+            && strlen($query['page']))
+        {
+            $page = $query['page'];
+        }
+
+        $q->set_offset($page * $pagesize);
+
         $q->execute();
 
         $cnt = $q->get_results_count();
+
         $ocs = new com_meego_ocs_OCSWriter();
 
         if ($cnt > 0)
         {
             $packages = $q->list_objects();
 
-            foreach ($packages as $package){
+            foreach ($packages as $package)
+            {
+                // get number of comments
                 $comments_qs = new midgard_query_storage('com_meego_comments_comment');
                 $comments_q = new midgard_query_select($comments_qs);
+
                 $comments_q->set_constraint(
                     new midgard_query_constraint(
                         new midgard_query_property('up'),
@@ -159,13 +170,17 @@ class com_meego_ocs_controllers_content
                         new midgard_query_value($packages[0]->packageguid)
                     )
                 );
+
                 $comments_q->execute();
+
                 $package->comments_count = $comments_q->get_results_count();
 
+                // get attachments
                 $origpackage = new com_meego_package($package->packageguid);
                 $package->attachments = $origpackage->list_attachments();
                 unset ($origpackage);
 
+                // generate a URL to the package instance
                 $repository = new com_meego_repository($package->repoid);
 
                 if (isset($args['id']))
@@ -186,11 +201,13 @@ class com_meego_ocs_controllers_content
                 }
             }
 
+            // write the xml content
             $ocs->writeMeta($cnt);
             $ocs->writeContent($packages);
         }
-        else // item not found
+        else
         {
+            // item not found
             $ocs->writeMeta($cnt, 'content not found', 'failed', 101);
             $ocs->writeEmptyData();
         }
@@ -207,5 +224,4 @@ class com_meego_ocs_controllers_content
 
         midgardmvc_core::get_instance()->dispatcher->end_request();
     }
-
 }
