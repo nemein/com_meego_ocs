@@ -17,13 +17,14 @@ class com_meego_ocs_OCSWriter extends XMLWriter
     /**
      * Dumps meta element
      */
-    public function writeMeta($totalitems, $message = '', $status = 'ok', $statuscode = '100')
+    public function writeMeta($totalitems, $message = '', $status = 'ok', $statuscode = '100', $itemsperpage = '100')
     {
         $this->startElement('meta');
         $this->writeElement('status', $status);
         $this->writeElement('statuscode', $statuscode);
         $this->writeElement('message', $message);
         $this->writeElement('totalitems', $totalitems);
+        $this->writeElement('itemsperpage', $itemsperpage);
         $this->endElement(); // meta
     }
 
@@ -33,6 +34,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
     public function writeCategories($list)
     {
         $this->startElement('data');
+
         foreach ($list as $obj)
         {
             $this->startElement('category');
@@ -40,6 +42,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
             $this->writeElement('name', $obj->name);
             $this->endElement(); // category
         }
+
         $this->endElement(); // data
     }
 
@@ -99,6 +102,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
             }
 
             $this->writeElement('comments', $package->comments_count);
+
             if (isset($package->commentsurl))
             {
                 $this->writeElement('commentspage', $package->commentsurl);
@@ -140,7 +144,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
             $this->writeElement('id', $obj['id']);
             $this->writeElement('name', $obj['name']);
             $this->writeElement('link', $obj['link']);
-            $this->endElement(); // distribution
+            $this->endElement();
         }
 
         $this->endElement(); // data
