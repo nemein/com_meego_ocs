@@ -166,21 +166,27 @@ class com_meego_ocs_controllers_content
 
             foreach ($packages as $package)
             {
+                $package->comments_count = 0;
+
                 // get number of comments
                 $comments_qs = new midgard_query_storage('com_meego_comments_comment');
                 $comments_q = new midgard_query_select($comments_qs);
 
                 $comments_q->set_constraint(
                     new midgard_query_constraint(
-                        new midgard_query_property('up'),
+                        new midgard_query_property('to'),
                         '=',
-                        new midgard_query_value($packages[0]->packageguid)
+                        new midgard_query_value($package->packageguid)
                     )
                 );
 
                 $comments_q->execute();
 
                 $package->comments_count = $comments_q->get_results_count();
+
+                # debug
+                #echo "package: " . $package->packageid . ', ' . $package->packagename . ': ' . $package->comments_count . "\n";
+                #ob_flush();
 
                 // get attachments
                 $origpackage = new com_meego_package($package->packageguid);
