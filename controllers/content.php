@@ -30,8 +30,10 @@ class com_meego_ocs_controllers_content
         $q->execute();
 
         $ocs = new com_meego_ocs_OCSWriter();
+
         $ocs->writeMeta($q->get_results_count());
         $ocs->writeDistributions($q->list_objects());
+
         $ocs->endDocument();
 
         self::output_xml($ocs);
@@ -127,6 +129,12 @@ class com_meego_ocs_controllers_content
             );
         }
 
+        // 1st execute to get the total number of records
+        // required by OCS
+        $q->execute();
+
+        $cnt = $q->get_results_count();
+
         // set page size
         $pagesize = 100;
 
@@ -147,9 +155,8 @@ class com_meego_ocs_controllers_content
 
         $q->set_offset($page * $pagesize);
 
+        // 2nd execute to limit pagesize
         $q->execute();
-
-        $cnt = $q->get_results_count();
 
         $ocs = new com_meego_ocs_OCSWriter();
 
@@ -202,7 +209,7 @@ class com_meego_ocs_controllers_content
             }
 
             // write the xml content
-            $ocs->writeMeta($cnt);
+            $ocs->writeMeta($cnt, '', 'ok', '100', $pagesize);
             $ocs->writeContent($packages);
         }
         else
@@ -223,10 +230,36 @@ class com_meego_ocs_controllers_content
      */
     public function get_licenses(array $args)
     {
-        $q = new midgard_query_select(new midgard_query_storage('com_meego_package'));
+        // to store the unique licenses
+        $licenses = array();
+
+        $q = new midgard_query_select(new midgard_query_storage('com_meego_package_license'));
+
+        // to get the number of all icenses; required by OCS
+        $q->execute();
+
+        $packages = $q->list_objects();
+
+        $id = 0;
+
+        foreach ($packages as $package)
+        {
+            if ( ! array_key_exists($package->license, $licenses))
+            {
+                $id++;
+                $licenses[$package->license] = array(
+                    'id' => $id,
+                    'name' => $package->license,
+                    /** todo: write a subroutine which can fetch licenses based on their names or something **/
+                    'link' => 'N/A'
+                );
+            }
+        }
+
+        $total = count($licenses);
 
         // set page size
-        $pagesize = 100;
+        $pagesize = 10;
 
         $query = $this->request->get_query();
 
@@ -236,41 +269,29 @@ class com_meego_ocs_controllers_content
             $pagesize = $query['pagesize'];
         }
 
-        $q->set_limit($pagesize);
-        $page = 0;
-
-        if (   array_key_exists('page', $query)
-            && strlen($query['page']))
+        if (count($licenses) > $pagesize)
         {
-            $page = $query['page'];
+            $page = 0;
+
+            if (   array_key_exists('page', $query)
+                && strlen($query['page']))
+            {
+                $page = $query['page'];
+            }
+
+            $offset = $page * $pagesize;
+
+            if ($offset > count($licenses))
+            {
+                $offset = count($licenses) - $pagesize;
+            }
+
+            $licenses = array_slice($licenses, $offset, $pagesize);
         }
-
-        $q->set_offset($page * $pagesize);
-
-        $q->execute();
 
         $ocs = new com_meego_ocs_OCSWriter();
 
-        $packages = $q->list_objects();
-        // to store the unique licenses
-        $licenses = array();
-
-        $id = 0;
-        foreach ($packages as $package)
-        {
-            if ( ! array_key_exists($package->license, $licenses))
-            {
-                $id++;
-                $licenses[$package->license] = array(
-                    'id' => $id,
-                    'name' => $package->license,
-                    /** @todo: write a subroutine which can fetch licenses based on their names or something **/
-                    'link' => 'N/A'
-                );
-            }
-        }
-
-        $ocs->writeMeta(count($licenses));
+        $ocs->writeMeta($total, '', 'ok', '100', $pagesize);
         $ocs->writeLicenses($licenses);
 
         $ocs->endDocument();
