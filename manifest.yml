@@ -22,10 +22,10 @@ routes:
         path: /v1/content/distributions
         controller: com_meego_ocs_controllers_content
         action: distributions
-#    content_dependencies:
-#        path: /v1/content/dependencies
-#        controller: com_meego_ocs_controllers_content
-#        action: dependencies
+    content_dependencies:
+        path: /v1/content/dependencies
+        controller: com_meego_ocs_controllers_content
+        action: dependencies
 #    content_homepagetypes:
 #        path: /v1/content/homepagetypes
 #        controller: com_meego_ocs_controllers_content
