@@ -94,10 +94,22 @@ class com_meego_ocs_controllers_content
      */
     public function get_data(array $args)
     {
+        $query = $this->request->get_query();
+
         $storage = new midgard_query_storage('com_meego_package_details');
         $q = new midgard_query_select($storage);
 
-        $query = $this->request->get_query();
+        $qc = new midgard_query_constraint_group('AND');
+
+        // a dummy constraint to make sure SELECT will work even if
+        // query contains only one argument
+        $qc->add_constraint(
+            new midgard_query_constraint(
+                new midgard_query_property('packageid'),
+                '>',
+                new midgard_query_value(0)
+            )
+        );
 
         if (count($query))
         {
@@ -117,12 +129,12 @@ class com_meego_ocs_controllers_content
 
                 $group_constraint = new midgard_query_constraint_group ("OR", $cnstr1, $cnstr2);
 
-                $q->set_constraint($group_constraint);
+                $qc->add_constraint($group_constraint);
             }
             if (   array_key_exists('categories', $query)
                 && strlen($query['categories']))
             {
-                $q->set_constraint(
+                $qc->add_constraint(
                     new midgard_query_constraint(
                         new midgard_query_property('basecategory'),
                         'IN',
@@ -133,7 +145,7 @@ class com_meego_ocs_controllers_content
             if (   array_key_exists('license', $query)
                 && strlen($query['license']))
             {
-                $q->set_constraint(
+                $qc->add_constraint(
                     new midgard_query_constraint(
                         new midgard_query_property('packagelicenseid'),
                         'IN',
@@ -144,7 +156,7 @@ class com_meego_ocs_controllers_content
             if (   array_key_exists('distribution', $query)
                 && strlen($query['distribution']))
             {
-                $q->set_constraint(
+                $qc->add_constraint(
                     new midgard_query_constraint(
                         new midgard_query_property('repoosversionid'),
                         'IN',
@@ -155,7 +167,7 @@ class com_meego_ocs_controllers_content
             if (   array_key_exists('dependency', $query)
                 && strlen($query['dependency']))
             {
-                $q->set_constraint(
+                $qc->add_constraint(
                     new midgard_query_constraint(
                         new midgard_query_property('repoosuxid'),
                         'IN',
@@ -169,17 +181,17 @@ class com_meego_ocs_controllers_content
                 switch ($query['sortmode'])
                 {
                     case 'new'  :
-                                  $q->add_order(
+                                  $qc->add_order(
                                       new midgard_query_property('packagerevised'),
                                       SORT_DESC);
                                   break;
                     case 'alpha':
-                                  $q->add_order(
+                                  $qc->add_order(
                                       new midgard_query_property('packagename'),
                                       SORT_ASC);
                                   break;
                     case 'high' :
-                                  $q->add_order(
+                                  $qc->add_order(
                                       new midgard_query_property('packagescore'),
                                       SORT_DESC);
                                   break;
@@ -195,7 +207,7 @@ class com_meego_ocs_controllers_content
 
         if (isset($args['id']))
         {
-            $q->set_constraint(
+            $qc->add_constraint(
                 new midgard_query_constraint(
                     new midgard_query_property('packageid'),
                     '=',
@@ -203,6 +215,8 @@ class com_meego_ocs_controllers_content
                 )
             );
         }
+
+        $q->set_constraint($qc);
 
         // 1st execute to get the total number of records
         // required by OCS
@@ -370,6 +384,7 @@ class com_meego_ocs_controllers_content
     public function get_dependencies(array $args)
     {
         $q = new midgard_query_select(new midgard_query_storage('com_meego_ux'));
+
         $q->execute();
 
         $total = $q->get_results_count();
