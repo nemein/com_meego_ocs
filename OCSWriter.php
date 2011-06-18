@@ -17,7 +17,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
     /**
      * Dumps meta element
      */
-    public function writeMeta($totalitems, $message = '', $status = 'ok', $statuscode = '100', $itemsperpage = '100')
+    public function writeMeta($totalitems, $itemsperpage = '100', $message = '', $status = 'ok', $statuscode = '100')
     {
         $this->startElement('meta');
         $this->writeElement('status', $status);
@@ -124,7 +124,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
         {
             $this->startElement('distribution');
             $this->writeElement('id', $obj->id);
-            $this->writeElement('name', $obj->name);
+            $this->writeElement('name', $obj->name . ' ' . $obj->version);
             $this->endElement(); // distribution
         }
 
@@ -141,10 +141,28 @@ class com_meego_ocs_OCSWriter extends XMLWriter
         foreach ($list as $obj)
         {
             $this->startElement('licenses');
-            $this->writeElement('id', $obj['id']);
-            $this->writeElement('name', $obj['name']);
-            $this->writeElement('link', $obj['link']);
+            $this->writeElement('id', $obj->id);
+            $this->writeElement('name', $obj->name);
+            $this->writeElement('link', $obj->url);
             $this->endElement();
+        }
+
+        $this->endElement(); // data
+    }
+
+    /**
+     * Dumps dependency elements
+     */
+    public function writeDependencies($list)
+    {
+        $this->startElement('data');
+
+        foreach ($list as $obj)
+        {
+            $this->startElement('dependency');
+            $this->writeElement('id', $obj->id);
+            $this->writeElement('name', $obj->name);
+            $this->endElement(); // distribution
         }
 
         $this->endElement(); // data
