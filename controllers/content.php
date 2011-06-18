@@ -4,11 +4,22 @@
 //
 class com_meego_ocs_controllers_content
 {
+    // @todo: make the default page size configurable
+    //        and set it in the constructor
+    var $pagesize = 100;
+
     public function __construct(midgardmvc_core_request $request)
     {
         $this->request = $request;
     }
 
+    /**
+     * Returns "basecategories", e.g. Games, Multimedia
+     * These are not the package categoiries, but the categories
+     * MeeGo Apps defined. They are mapped to real package categories anyway.
+     *
+     * @param array HTTP GET args
+     */
     public function get_categories(array $args)
     {
         $q = new midgard_query_select(new midgard_query_storage('com_meego_package_basecategory'));
@@ -16,7 +27,7 @@ class com_meego_ocs_controllers_content
 
         $ocs = new com_meego_ocs_OCSWriter();
 
-        $ocs->writeMeta($q->get_results_count());
+        $ocs->writeMeta($q->get_results_count(), $this->pagesize);
         $ocs->writeCategories($q->list_objects());
 
         $ocs->endDocument();
@@ -24,14 +35,51 @@ class com_meego_ocs_controllers_content
         self::output_xml($ocs);
     }
 
+    /**
+     * Returns "dependencies", ie. various OS releases, ie. meego 1.2
+     *
+     * @param array HTTP GET args
+     */
     public function get_distributions(array $args)
     {
-        $q = new midgard_query_select(new midgard_query_storage('com_meego_repository'));
+        $q = new midgard_query_select(new midgard_query_storage('com_meego_os'));
+        $q->execute();
+
+        $total = $q->get_results_count();
+
+        $query = $this->request->get_query();
+
+        if (   array_key_exists('pagesize', $query)
+            && strlen($query['pagesize']))
+        {
+            $this->pagesize = $query['pagesize'];
+        }
+
+        $q->set_limit($this->pagesize);
+
+        $page = 0;
+
+        if (   array_key_exists('page', $query)
+            && strlen($query['page']))
+        {
+            $page = $query['page'];
+        }
+
+        $offset = $page * $this->pagesize;
+
+        $q->set_offset($offset);
+
+        if ($offset > $total)
+        {
+            $offset = $total - $this->pagesize;
+        }
+
+        // 2nd execute to limit pagesize
         $q->execute();
 
         $ocs = new com_meego_ocs_OCSWriter();
 
-        $ocs->writeMeta($q->get_results_count());
+        $ocs->writeMeta($total, $this->pagesize);
         $ocs->writeDistributions($q->list_objects());
 
         $ocs->endDocument();
@@ -39,6 +87,11 @@ class com_meego_ocs_controllers_content
         self::output_xml($ocs);
     }
 
+    /**
+     * The main method to return list of packages
+     *
+     * @param array HTTP GET arguments
+     */
     public function get_data(array $args)
     {
         $storage = new midgard_query_storage('com_meego_package_details');
@@ -77,14 +130,36 @@ class com_meego_ocs_controllers_content
                     )
                 );
             }
+            if (   array_key_exists('license', $query)
+                && strlen($query['license']))
+            {
+                $q->set_constraint(
+                    new midgard_query_constraint(
+                        new midgard_query_property('packagelicenseid'),
+                        'IN',
+                        new midgard_query_value(explode(',',$query['license']))
+                    )
+                );
+            }
             if (   array_key_exists('distribution', $query)
                 && strlen($query['distribution']))
             {
                 $q->set_constraint(
                     new midgard_query_constraint(
-                        new midgard_query_property('repoid'),
+                        new midgard_query_property('repoosversionid'),
                         'IN',
                         new midgard_query_value(explode(',',$query['distribution']))
+                    )
+                );
+            }
+            if (   array_key_exists('dependency', $query)
+                && strlen($query['dependency']))
+            {
+                $q->set_constraint(
+                    new midgard_query_constraint(
+                        new midgard_query_property('repoosuxid'),
+                        'IN',
+                        new midgard_query_value(explode(',',$query['dependency']))
                     )
                 );
             }
@@ -133,18 +208,16 @@ class com_meego_ocs_controllers_content
         // required by OCS
         $q->execute();
 
-        $cnt = $q->get_results_count();
-
-        // set page size
-        $pagesize = 100;
+        $total = $q->get_results_count();
 
         if (   array_key_exists('pagesize', $query)
             && strlen($query['pagesize']))
         {
-            $pagesize = $query['pagesize'];
+            $this->pagesize = $query['pagesize'];
         }
 
-        $q->set_limit($pagesize);
+        $q->set_limit($this->pagesize);
+
         $page = 0;
 
         if (   array_key_exists('page', $query)
@@ -153,14 +226,21 @@ class com_meego_ocs_controllers_content
             $page = $query['page'];
         }
 
-        $q->set_offset($page * $pagesize);
+        $offset = $page * $this->pagesize;
+
+        $q->set_offset($offset);
+
+        if ($offset > $total)
+        {
+            $offset = $total - $this->pagesize;
+        }
 
         // 2nd execute to limit pagesize
         $q->execute();
 
         $ocs = new com_meego_ocs_OCSWriter();
 
-        if ($cnt > 0)
+        if ($total > 0)
         {
             $packages = $q->list_objects();
 
@@ -215,13 +295,13 @@ class com_meego_ocs_controllers_content
             }
 
             // write the xml content
-            $ocs->writeMeta($cnt, '', 'ok', '100', $pagesize);
+            $ocs->writeMeta($total, $this->pagesize);
             $ocs->writeContent($packages);
         }
         else
         {
             // item not found
-            $ocs->writeMeta($cnt, 'content not found', 'failed', 101);
+            $ocs->writeMeta($total, $this->pagesize, 'content not found', 'failed', 101);
             $ocs->writeEmptyData();
         }
 
@@ -236,46 +316,23 @@ class com_meego_ocs_controllers_content
      */
     public function get_licenses(array $args)
     {
-        // to store the unique licenses
-        $licenses = array();
+        $q = new midgard_query_select(new midgard_query_storage('com_meego_license'));
 
-        $q = new midgard_query_select(new midgard_query_storage('com_meego_package_license'));
-
-        // to get the number of all icenses; required by OCS
         $q->execute();
 
-        $packages = $q->list_objects();
+        $licenses = $q->list_objects();
 
-        $id = 0;
-
-        foreach ($packages as $package)
-        {
-            if ( ! array_key_exists($package->license, $licenses))
-            {
-                $id++;
-                $licenses[$package->license] = array(
-                    'id' => $id,
-                    'name' => $package->license,
-                    /** todo: write a subroutine which can fetch licenses based on their names or something **/
-                    'link' => 'N/A'
-                );
-            }
-        }
-
-        $total = count($licenses);
-
-        // set page size
-        $pagesize = 10;
+        $total = $q->get_results_count();
 
         $query = $this->request->get_query();
 
         if (   array_key_exists('pagesize', $query)
             && strlen($query['pagesize']))
         {
-            $pagesize = $query['pagesize'];
+            $this->pagesize = $query['pagesize'];
         }
 
-        if (count($licenses) > $pagesize)
+        if ($total > $this->pagesize)
         {
             $page = 0;
 
@@ -285,20 +342,72 @@ class com_meego_ocs_controllers_content
                 $page = $query['page'];
             }
 
-            $offset = $page * $pagesize;
+            $offset = $page * $this->pagesize;
 
-            if ($offset > count($licenses))
+            if ($offset > $total)
             {
-                $offset = count($licenses) - $pagesize;
+                $offset = $total - $this->pagesize;
             }
 
-            $licenses = array_slice($licenses, $offset, $pagesize);
+            $licenses = array_slice($licenses, $offset, $this->pagesize);
         }
 
         $ocs = new com_meego_ocs_OCSWriter();
 
-        $ocs->writeMeta($total, '', 'ok', '100', $pagesize);
+        $ocs->writeMeta($total, $this->pagesize, '', 'ok', '100');
         $ocs->writeLicenses($licenses);
+
+        $ocs->endDocument();
+
+        self::output_xml($ocs);
+    }
+
+    /**
+     * Returns "dependencies", ie. various UXes (User Experiences)
+     *
+     * @param array HTTP GET args
+     */
+    public function get_dependencies(array $args)
+    {
+        $q = new midgard_query_select(new midgard_query_storage('com_meego_ux'));
+        $q->execute();
+
+        $total = $q->get_results_count();
+
+        $query = $this->request->get_query();
+
+        if (   array_key_exists('pagesize', $query)
+            && strlen($query['pagesize']))
+        {
+            $this->pagesize = $query['pagesize'];
+        }
+
+        $q->set_limit($this->pagesize);
+
+        $page = 0;
+
+        if (   array_key_exists('page', $query)
+            && strlen($query['page']))
+        {
+            $page = $query['page'];
+        }
+
+        $offset = $page * $this->pagesize;
+
+        $q->set_offset($offset);
+
+        if ($offset > $total)
+        {
+            $offset = $total - $this->pagesize;
+        }
+
+        // 2nd execute to limit pagesize
+        $q->execute();
+
+        $ocs = new com_meego_ocs_OCSWriter();
+
+        $ocs->writeMeta($total, $this->pagesize);
+        $ocs->writeDependencies($q->list_objects());
 
         $ocs->endDocument();
 
