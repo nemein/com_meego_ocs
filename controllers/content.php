@@ -288,10 +288,9 @@ class com_meego_ocs_controllers_content
                 unset ($origpackage);
 
                 // generate the URL of the package instance
-
                 if (isset($args['id']))
                 {
-                    $package->commentsurl = midgardmvc_core::get_instance()->dispatcher->generate_url
+                    $path = midgardmvc_core::get_instance()->dispatcher->generate_url
                     (
                         'package_instance',
                         array
@@ -302,8 +301,10 @@ class com_meego_ocs_controllers_content
                             'repository' => $package->reponame,
                             'arch' => $package->repoarch
                         ),
-                        'com_meego_packages'
+                        '/'
                     );
+
+                    $package->commentsurl = com_meego_ocs_controllers_providers::generate_url($path);
                 }
             }
 
