@@ -60,7 +60,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
             $this->startElement('content');
             $this->writeAttribute('details','full');
             $this->writeElement('id',            $package->packageid);
-            $this->writeElement('name',          $package->packagetitle);
+            $this->writeElement('name',          $package->packagename);
             $this->writeElement('version',       $package->packageversion);
             $this->writeElement('description',   $package->packagedescription);
             $this->writeElement('summary',       $package->packagesummary);
