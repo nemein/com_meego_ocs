@@ -60,13 +60,21 @@ class com_meego_ocs_OCSWriter extends XMLWriter
             $this->startElement('content');
             $this->writeAttribute('details','full');
             $this->writeElement('id',            $package->packageid);
-            $this->writeElement('name',          $package->packagename);
+            $this->writeElement('name',          $package->packagetitle);
             $this->writeElement('version',       $package->packageversion);
             $this->writeElement('description',   $package->packagedescription);
             $this->writeElement('summary',       $package->packagesummary);
             $this->writeElement('homepage',      $package->packagehomepageurl);
             $this->writeElement('created',       $package->packagecreated);
             $this->writeElement('changed',       $package->packagerevised);
+            $this->writeElement('x-distribution',  $package->repoosversionid);
+            $this->writeElement('x-dependency',    $package->repoosuxid);
+            $this->writeElement('x-repository',    $package->reponame);
+            $this->writeElement('x-project',       $package->repoprojectname);
+            $this->writeElement('x-os',            $package->repoos);
+            $this->writeElement('x-osversion',     $package->repoosversion);
+            $this->writeElement('x-arch',          $package->repoarch);
+            $this->writeElement('x-ux',            $package->repoosux);
 
             $dispatcher = midgardmvc_core::get_instance()->dispatcher;
 

@@ -181,17 +181,17 @@ class com_meego_ocs_controllers_content
                 switch ($query['sortmode'])
                 {
                     case 'new'  :
-                                  $qc->add_order(
+                                  $q->add_order(
                                       new midgard_query_property('packagerevised'),
                                       SORT_DESC);
                                   break;
                     case 'alpha':
-                                  $qc->add_order(
+                                  $q->add_order(
                                       new midgard_query_property('packagename'),
                                       SORT_ASC);
                                   break;
                     case 'high' :
-                                  $qc->add_order(
+                                  $q->add_order(
                                       new midgard_query_property('packagescore'),
                                       SORT_DESC);
                                   break;
@@ -216,7 +216,11 @@ class com_meego_ocs_controllers_content
             );
         }
 
-        $q->set_constraint($qc);
+        if (   count($query) > 1
+            || isset($args['id']))
+        {
+            $q->set_constraint($qc);
+        }
 
         // 1st execute to get the total number of records
         // required by OCS
