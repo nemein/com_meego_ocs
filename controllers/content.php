@@ -94,22 +94,12 @@ class com_meego_ocs_controllers_content
      */
     public function get_data(array $args)
     {
+        $constraints = array();
+
         $query = $this->request->get_query();
 
         $storage = new midgard_query_storage('com_meego_package_details');
         $q = new midgard_query_select($storage);
-
-        $qc = new midgard_query_constraint_group('AND');
-
-        // a dummy constraint to make sure SELECT will work even if
-        // query contains only one argument
-        $qc->add_constraint(
-            new midgard_query_constraint(
-                new midgard_query_property('packageid'),
-                '>',
-                new midgard_query_value(0)
-            )
-        );
 
         if (count($query))
         {
@@ -129,50 +119,42 @@ class com_meego_ocs_controllers_content
 
                 $group_constraint = new midgard_query_constraint_group ("OR", $cnstr1, $cnstr2);
 
-                $qc->add_constraint($group_constraint);
+                $constraints[] = $group_constraint;
             }
             if (   array_key_exists('categories', $query)
                 && strlen($query['categories']))
             {
-                $qc->add_constraint(
-                    new midgard_query_constraint(
-                        new midgard_query_property('basecategory'),
-                        'IN',
-                        new midgard_query_value(explode('x',$query['categories']))
-                    )
+                $constraints[] = new midgard_query_constraint(
+                    new midgard_query_property('basecategory'),
+                    'IN',
+                    new midgard_query_value(explode('x', $query['categories']))
                 );
             }
             if (   array_key_exists('license', $query)
                 && strlen($query['license']))
             {
-                $qc->add_constraint(
-                    new midgard_query_constraint(
-                        new midgard_query_property('packagelicenseid'),
-                        'IN',
-                        new midgard_query_value(explode(',',$query['license']))
-                    )
+                $constraints[] = new midgard_query_constraint(
+                    new midgard_query_property('packagelicenseid'),
+                    'IN',
+                    new midgard_query_value(explode(',', $query['license']))
                 );
             }
             if (   array_key_exists('distribution', $query)
                 && strlen($query['distribution']))
             {
-                $qc->add_constraint(
-                    new midgard_query_constraint(
-                        new midgard_query_property('repoosversionid'),
-                        'IN',
-                        new midgard_query_value(explode(',',$query['distribution']))
-                    )
+                $constraints[] = new midgard_query_constraint(
+                    new midgard_query_property('repoosversionid'),
+                    'IN',
+                    new midgard_query_value(explode(',', $query['distribution']))
                 );
             }
             if (   array_key_exists('dependency', $query)
                 && strlen($query['dependency']))
             {
-                $qc->add_constraint(
-                    new midgard_query_constraint(
-                        new midgard_query_property('repoosuxid'),
-                        'IN',
-                        new midgard_query_value(explode(',',$query['dependency']))
-                    )
+                $constraints[] = new midgard_query_constraint(
+                    new midgard_query_property('repoosuxid'),
+                    'IN',
+                    new midgard_query_value(explode(',', $query['dependency']))
                 );
             }
             if (   array_key_exists('sortmode', $query)
@@ -207,20 +189,27 @@ class com_meego_ocs_controllers_content
 
         if (isset($args['id']))
         {
-            $qc->add_constraint(
-                new midgard_query_constraint(
-                    new midgard_query_property('packageid'),
-                    '=',
-                    new midgard_query_value($args['id'])
-                )
+            $constraints[] = new midgard_query_constraint(
+                new midgard_query_property('packageid'),
+                '=',
+                new midgard_query_value($args['id'])
             );
         }
 
-        if (   count($query) > 1
-            || isset($args['id']))
+        if (count($constraints) > 1)
         {
-            $q->set_constraint($qc);
+            $qc = new midgard_query_constraint_group('AND');
+            foreach($constraints as $constraint)
+            {
+                $qc->add_constraint($constraint);
+            }
         }
+        else
+        {
+            $qc = $constraints[0];
+        }
+
+        $q->set_constraint($qc);
 
         // 1st execute to get the total number of records
         // required by OCS
