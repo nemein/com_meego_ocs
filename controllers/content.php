@@ -282,17 +282,12 @@ class com_meego_ocs_controllers_content
 
                 $package->comments_count = $comments_q->get_results_count();
 
-                # debug
-                #echo "package: " . $package->packageid . ', ' . $package->packagename . ': ' . $package->comments_count . "\n";
-                #ob_flush();
-
                 // get attachments
                 $origpackage = new com_meego_package($package->packageguid);
                 $package->attachments = $origpackage->list_attachments();
                 unset ($origpackage);
 
                 // generate the URL of the package instance
-                $repository = new com_meego_repository($package->repoid);
 
                 if (isset($args['id']))
                 {
@@ -305,7 +300,7 @@ class com_meego_ocs_controllers_content
                             'version' => $package->packageversion,
                             'project' => $package->repoproject,
                             'repository' => $package->repoid,
-                            'arch' => $repository->repoarch
+                            'arch' => $package->repoarch
                         ),
                         'com_meego_packages'
                     );
