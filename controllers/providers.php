@@ -14,7 +14,7 @@ class com_meego_ocs_controllers_providers
         $this->data['api_url'] = $this->generate_url('/ocs/v1');
     }
 
-    private function generate_url($path)
+    public function generate_url($path)
     {
         $protocol = 'http';
         if ($_SERVER['SERVER_PORT'] == 443)
