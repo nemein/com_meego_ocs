@@ -196,6 +196,8 @@ class com_meego_ocs_controllers_content
             );
         }
 
+        $qc = null;
+
         if (count($constraints) > 1)
         {
             $qc = new midgard_query_constraint_group('AND');
@@ -206,10 +208,16 @@ class com_meego_ocs_controllers_content
         }
         else
         {
-            $qc = $constraints[0];
+            if (isset($constraints[0]))
+            {
+                $qc = $constraints[0];
+            }
         }
 
-        $q->set_constraint($qc);
+        if (is_object($qc))
+        {
+            $q->set_constraint($qc);
+        }
 
         // 1st execute to get the total number of records
         // required by OCS
