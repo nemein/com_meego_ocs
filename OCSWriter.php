@@ -53,7 +53,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
     {
         $this->startElement('data');
 
-        $urlbase = midgardmvc_core::get_instance()->configuration->base_url;
+        //$urlbase = midgardmvc_core::get_instance()->configuration->base_url;
 
         foreach ($packages as $package)
         {
@@ -83,32 +83,58 @@ class com_meego_ocs_OCSWriter extends XMLWriter
             $counter = 0;
             foreach ($package->attachments as $attachment)
             {
-                $counter++;
-                $_screenshoturl = $urlbase . $dispatcher->generate_url(
-                    'attachmentserver_variant',
-                    array(
-                        'guid' => $attachment->guid,
-                        'variant' => 'sidesquare',
-                        'filename' => $attachment->name,
-                    ),
-                    '/'
-                );
+                // check if attachment is XML (we consider that as a 1 click install file)
+                if ($attachment->mimetype == "application/xml")
+                {
+                    $_downloadurl = com_meego_ocs_controllers_providers::generate_url(
+                        $dispatcher->generate_url(
+                            'attachmentserver_variant',
+                            array(
+                                'guid' => $attachment->guid,
+                                'variant' => '',
+                                'filename' => $attachment->name,
+                            ),
+                            '/'
+                        )
+                    );
+                }
 
-                $_smallscreenshoturl = $urlbase . $dispatcher->generate_url(
-                    'attachmentserver_variant',
-                    array(
-                        'guid' => $attachment->guid,
-                        'variant' => 'thumbnail',
-                        'filename' => $attachment->name,
-                    ),
-                    '/'
-                );
+                // check if attachment MIME type is image something
+                if ($attachment->mimetype == "image/png")
+                {
+                    $counter++;
+                    $_screenshoturl = com_meego_ocs_controllers_providers::generate_url(
+                        $dispatcher->generate_url(
+                            'attachmentserver_variant',
+                            array(
+                                'guid' => $attachment->guid,
+                                'variant' => 'sidesquare',
+                                'filename' => $attachment->name,
+                            ),
+                            '/'
+                        )
+                    );
 
-                $this->writeElement('previewpic'.$counter,      $_screenshoturl);
-                $this->writeElement('smallpreviewpic'.$counter, $_smallscreenshoturl);
+                    $_smallscreenshoturl = com_meego_ocs_controllers_providers::generate_url(
+                        $dispatcher->generate_url(
+                            'attachmentserver_variant',
+                            array(
+                                'guid' => $attachment->guid,
+                                'variant' => 'thumbnail',
+                                'filename' => $attachment->name,
+                            ),
+                            '/'
+                        )
+                    );
 
-                if ($counter == 3)
-                    break;
+                    $this->writeElement('previewpic'.$counter,      $_screenshoturl);
+                    $this->writeElement('smallpreviewpic'.$counter, $_smallscreenshoturl);
+
+                    if ($counter == 3)
+                    {
+                        break;
+                    }
+                }
             }
 
             $this->writeElement('comments', $package->comments_count);
@@ -117,6 +143,14 @@ class com_meego_ocs_OCSWriter extends XMLWriter
             {
                 $this->writeElement('commentspage', $package->commentsurl);
             }
+
+            // figure out the one click install file URL
+            if (substr($package->packageinstallfileurl, 0, 4) == 'http')
+            {
+                $_downloadurl = $package->packageinstallfileurl;
+            }
+
+            $this->writeElement('downloadlink1', $_downloadurl);
 
             $this->endElement(); //content
         }
