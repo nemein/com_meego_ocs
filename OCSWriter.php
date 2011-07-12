@@ -150,6 +150,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
                 $_downloadurl = $package->packageinstallfileurl;
             }
 
+            $this->writeElement('downloadname1', $package->packagename);
             $this->writeElement('downloadlink1', $_downloadurl);
 
             $this->endElement(); //content
