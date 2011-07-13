@@ -102,37 +102,62 @@ class com_meego_ocs_OCSWriter extends XMLWriter
                 // check if attachment MIME type is image something
                 if ($attachment->mimetype == "image/png")
                 {
-                    $counter++;
-                    $_screenshoturl = com_meego_ocs_controllers_providers::generate_url(
-                        $dispatcher->generate_url(
-                            'attachmentserver_variant',
-                            array(
-                                'guid' => $attachment->guid,
-                                'variant' => 'sidesquare',
-                                'filename' => $attachment->name,
-                            ),
-                            '/'
-                        )
-                    );
+                    $_icon_marker = 'icon.png';
+                    $_screenshot_marker = 'screenshot.png';
 
-                    $_smallscreenshoturl = com_meego_ocs_controllers_providers::generate_url(
-                        $dispatcher->generate_url(
-                            'attachmentserver_variant',
-                            array(
-                                'guid' => $attachment->guid,
-                                'variant' => 'thumbnail',
-                                'filename' => $attachment->name,
-                            ),
-                            '/'
-                        )
-                    );
-
-                    $this->writeElement('previewpic'.$counter,      $_screenshoturl);
-                    $this->writeElement('smallpreviewpic'.$counter, $_smallscreenshoturl);
-
-                    if ($counter == 3)
+                    // check if the name is *screenshot.png
+                    if (strrpos($attachment->name, $_screenshot_marker) !== false)
                     {
-                        break;
+                        $counter++;
+                        $_screenshoturl = com_meego_ocs_controllers_providers::generate_url(
+                            $dispatcher->generate_url(
+                                'attachmentserver_variant',
+                                array(
+                                    'guid' => $attachment->guid,
+                                    'variant' => 'sidesquare',
+                                    'filename' => $attachment->name,
+                                ),
+                                '/'
+                            )
+                        );
+
+                        $_smallscreenshoturl = com_meego_ocs_controllers_providers::generate_url(
+                            $dispatcher->generate_url(
+                                'attachmentserver_variant',
+                                array(
+                                    'guid' => $attachment->guid,
+                                    'variant' => 'thumbnail',
+                                    'filename' => $attachment->name,
+                                ),
+                                '/'
+                            )
+                        );
+
+                        $this->writeElement('previewpic'.$counter,      $_screenshoturl);
+                        $this->writeElement('smallpreviewpic'.$counter, $_smallscreenshoturl);
+
+                        if ($counter == 3)
+                        {
+                            break;
+                        }
+                    }
+
+                    // check if the name is *icon.png and generate <icon> elements
+                    if (strrpos($attachment->name, $_icon_marker) !== false)
+                    {
+                        $_iconurl = com_meego_ocs_controllers_providers::generate_url(
+                            $dispatcher->generate_url(
+                                'attachmentserver_variant',
+                                array(
+                                    'guid' => $attachment->guid,
+                                    'variant' => 'icon',
+                                    'filename' => $attachment->name,
+                                ),
+                                '/'
+                            )
+                        );
+
+                        $this->writeElement('icon', $_iconurl);
                     }
                 }
             }
