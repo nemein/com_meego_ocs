@@ -157,7 +157,14 @@ class com_meego_ocs_OCSWriter extends XMLWriter
                             )
                         );
 
-                        $this->writeElement('icon', $_iconurl);
+                        $mvc = midgardmvc_core::get_instance();
+                        $iconwidth = $mvc->configuration->attachmentserver_variants['icon']['croppedThumbnail']['width'];
+                        $iconheight = $mvc->configuration->attachmentserver_variants['icon']['croppedThumbnail']['height'];
+                        $this->startElement('icon');
+                        $this->writeAttribute('width', $iconwidth);
+                        $this->writeAttribute('height', $iconheight);
+                        $this->text($_iconurl);
+                        $this->endElement();
                     }
                 }
             }
