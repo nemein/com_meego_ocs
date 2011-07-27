@@ -4,6 +4,9 @@
 //
 class com_meego_ocs_controllers_content
 {
+    var $request = null;
+    var $mvc = null;
+
     // @todo: make the default page size configurable
     //        and set it in the constructor
     var $pagesize = 100;
@@ -11,6 +14,7 @@ class com_meego_ocs_controllers_content
     public function __construct(midgardmvc_core_request $request)
     {
         $this->request = $request;
+        $this->mvc = midgardmvc_core::get_instance();
     }
 
     /**
@@ -257,10 +261,23 @@ class com_meego_ocs_controllers_content
 
         if ($total > 0)
         {
+            $localpackages = array();
             $packages = $q->list_objects();
 
             foreach ($packages as $package)
             {
+                // need to group the packages so that they appear as applications
+                // for that we need an associative array
+                if (array_key_exists($package->packagetitle, $localpackages))
+                {
+                    // if there are multiple version of the same packages then we
+                    // should keep the latest only
+                    if ($package->packageversion <= $localpackages[$package->packagetitle]->packageversion)
+                    {
+                        continue;
+                    }
+                }
+
                 $package->comments_count = 0;
 
                 // get number of comments
@@ -303,11 +320,13 @@ class com_meego_ocs_controllers_content
 
                     $package->commentsurl = com_meego_ocs_controllers_providers::generate_url($path);
                 }
+
+                $localpackages[$package->packagetitle] = $package;
             }
 
             // write the xml content
             $ocs->writeMeta($total, $this->pagesize);
-            $ocs->writeContent($packages);
+            $ocs->writeContent(array_values($localpackages));
         }
         else
         {
