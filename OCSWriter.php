@@ -29,6 +29,18 @@ class com_meego_ocs_OCSWriter extends XMLWriter
     }
 
     /**
+     * Dumps meta element when error occured (ie. when status is not ok)
+     */
+    public function writeError($message = '', $statuscode = '101')
+    {
+        $this->startElement('meta');
+        $this->writeElement('status', 'nok');
+        $this->writeElement('statuscode', $statuscode);
+        $this->writeElement('message', $message);
+        $this->endElement(); // meta
+    }
+
+    /**
      * Dumps category elements
      */
     public function writeCategories($list)
