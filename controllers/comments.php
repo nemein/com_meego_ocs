@@ -102,17 +102,22 @@ class com_meego_ocs_controllers_comments
             }
             $ocs->endElement();
         }
-        
+
         $ocs->writeElement('user', '');
         $ocs->writeElement('date', $comment->metadata->created->format('c'));
         $ocs->writeElement('score', $comment->metadata->score);
         $ocs->endElement();
     }
 
+    /**
+     * Process a comment post
+     */
     public function post_add(array $args)
     {
+        $ocs = new com_meego_ocs_OCSWriter();
+
         // Commenting requires basic auth
-        $basic_auth = new midcom_core_services_authentication_basic();
+        $basic_auth = new midgardmvc_core_services_authentication_basic();
         $e = new Exception("Comment posting requires Basic authentication");
         $basic_auth->handle_exception($e);
 
@@ -123,22 +128,35 @@ class com_meego_ocs_controllers_comments
             'message',
         );
 
-        foreach ($required_params as $param)
+        if (! isset($_POST['content']))
         {
-            if (   !isset($_POST[$param])
-                || empty($_POST[$param]))
-            {
-                throw new midgardmvc_exception_notfound("Required parameter {$param} missing");
-            }
+            $ocs->writeError('Content must not be empty', 101);
+            $ocs->endDocument();
+            self::output_xml($ocs);
+            return;
+        }
+
+        if (! (isset($_POST['message'])
+            || isset($_POST['subject'])))
+        {
+            $ocs->writeError('Message or subject must not be empty', 102);
+            $ocs->endDocument();
+            self::output_xml($ocs);
+            return;
         }
 
         if ($_POST['type'] != 1)
         {
-            throw new midgardmvc_exception_notfound("Only CONTENT type supported");
+            throw new midgardmvc_exception_notfound("Only 'content' type ('1') is supported for now. Please set it.");
         }
 
         $primary = new com_meego_package();
         $primary->get_by_id((int) $_POST['content']);
+
+        if (! $primary->guid)
+        {
+            throw new midgardmvc_exception_notfound("Content object not found");
+        }
 
         $comment = new com_meego_comments_comment();
 
@@ -165,7 +183,22 @@ class com_meego_ocs_controllers_comments
 
         $comment->create();
 
-        $ocs = new com_meego_ocs_OCSWriter();
+        if ($comment->guid)
+        {
+            $rating = new com_meego_ratings_rating();
+
+            $rating->to = $primary->guid;
+            // for comments we have no votes
+            $rating->rating = 0;
+
+            $rating->comment = $comment->id;
+
+            if (! $rating->create())
+            {
+                throw new midgardmvc_exception_notfound("Could not create rating object");
+            }
+        }
+
         $ocs->writeMeta(0);
         $ocs->endDocument();
         self::output_xml($ocs);
