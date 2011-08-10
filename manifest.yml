@@ -42,10 +42,10 @@ routes:
 #        path: /v1/content/download
 #        controller: com_meego_ocs_controllers_content
 #        action: download
-#    content_vote:
-#        path: /v1/content/vote
-#        controller: com_meego_ocs_controllers_content
-#        action: vote
+    content_vote:
+        path: /v1/content/vote/{$contentid}
+        controller: com_meego_ocs_controllers_content
+        action: vote
 #    content_add:
 #        path: /v1/content/add
 #        controller: com_meego_ocs_controllers_content
