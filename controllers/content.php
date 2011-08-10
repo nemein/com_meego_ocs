@@ -445,6 +445,54 @@ class com_meego_ocs_controllers_content
         self::output_xml($ocs);
     }
 
+    /**
+     * Process vote posts
+     */
+    public function post_vote(array $args)
+    {
+        // Voting requires basic auth
+        $basic_auth = new midgardmvc_core_services_authentication_basic();
+        $e = new Exception("Vote posting requires Basic authentication");
+        $basic_auth->handle_exception($e);
+
+        $ocs = new com_meego_ocs_OCSWriter();
+
+        $primary = new com_meego_package();
+        $primary->get_by_id((int) $args['contentid']);
+
+        if (! $primary->guid)
+        {
+            $ocs->writeError('Content not found', 101);
+        }
+        else
+        {
+            $rating = new com_meego_ratings_rating();
+
+            $rating->to = $primary->guid;
+
+            $vote = $_POST['vote'];
+
+            if ($vote > $this->mvc->configuration->maxrate)
+            {
+                $vote = $this->mvc->configuration->maxrate;
+            }
+
+            $rating->rating = $vote;
+            // for votes only we have no comments
+            $rating->comment = 0;
+
+            if (! $rating->create())
+            {
+                throw new midgardmvc_exception_notfound("Could not create rating object");
+            }
+
+            $ocs->writeMeta(0);
+
+        }
+        $ocs->endDocument();
+        self::output_xml($ocs);
+    }
+
     private static function output_xml($xml)
     {
         midgardmvc_core::get_instance()->dispatcher->header('Content-type: application/xml');
