@@ -65,8 +65,6 @@ class com_meego_ocs_OCSWriter extends XMLWriter
     {
         $this->startElement('data');
 
-        //$urlbase = midgardmvc_core::get_instance()->configuration->base_url;
-
         foreach ($packages as $package)
         {
             $this->startElement('content');
