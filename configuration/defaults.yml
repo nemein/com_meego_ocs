@@ -1,2 +1,8 @@
+# items per page
 list_pagesize: 20
-base_url: "http://apps-beta.meego.com"
+# the required protocol
+ocs_protocol: https
+# sometimes we can not determine the host (e.g. behind load balancers, proxies etc.)
+ocs_host: apps.formeego.org
+# port number
+ocs_port: 443

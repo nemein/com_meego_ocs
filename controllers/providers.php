@@ -16,17 +16,14 @@ class com_meego_ocs_controllers_providers
 
     public function generate_url($path)
     {
-        $protocol = 'http';
-        if ($_SERVER['SERVER_PORT'] == 443)
-        {
-            $protocol = 'https';
-        }
+        $protocol = midgardmvc_core::get_instance()->configuration->ocs_protocol;
+        $host = midgardmvc_core::get_instance()->configuration->ocs_host;
+        $port = midgardmvc_core::get_instance()->configuration->ocs_port;
 
-        $host = $_SERVER['SERVER_NAME'];
-        if (   $_SERVER['SERVER_PORT'] != 80
-            && $_SERVER['SERVER_PORT'] != 443)
+        if (   $port != 80
+            && $port != 443)
         {
-            $host = "{$host}:{$_SERVER['SERVER_PORT']}";
+            $host = "{$host}:{$port}";
         }
 
         return "{$protocol}://{$host}{$path}";
