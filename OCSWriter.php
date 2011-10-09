@@ -93,8 +93,8 @@ class com_meego_ocs_OCSWriter extends XMLWriter
             $counter = 0;
             foreach ($package->attachments as $attachment)
             {
-                // check if attachment is XML (we consider that as a 1 click install file)
-                if ($attachment->mimetype == "application/xml")
+                // check if attachment is YMP (ie. 1 click install file)
+                if ($attachment->mimetype == "text/x-suse-ymp")
                 {
                     $_downloadurl = com_meego_ocs_controllers_providers::generate_url(
                         $dispatcher->generate_url(
