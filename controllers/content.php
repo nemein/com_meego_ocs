@@ -321,7 +321,7 @@ class com_meego_ocs_controllers_content
                     $package->commentsurl = com_meego_ocs_controllers_providers::generate_url($path);
                 }
 
-                $localpackages[$package->packagetitle] = $package;
+                $localpackages[] = $package;
             }
 
             // write the xml content
