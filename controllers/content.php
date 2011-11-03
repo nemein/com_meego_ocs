@@ -266,6 +266,25 @@ class com_meego_ocs_controllers_content
 
             foreach ($packages as $package)
             {
+                // filtering
+                $filtered = false;
+
+                // filter packages by their titles (see configuration: package_filters)
+                foreach ($this->mvc->configuration->package_filters as $filter)
+                {
+                    if (   ! $filtered
+                        && preg_match($filter, $package->packagename))
+                    {
+                        $filtered = true;
+                    }
+                }
+
+                if ($filtered)
+                {
+                    --$total;
+                    continue;
+                }
+
                 // need to group the packages so that they appear as applications
                 // for that we need an associative array
                 if (array_key_exists($package->packagetitle, $localpackages))
