@@ -193,6 +193,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
             }
 
             // figure out the one click install file URL
+            $_downloadurl = '';
             if (substr($package->packageinstallfileurl, 0, 4) == 'http')
             {
                 $_downloadurl = $package->packageinstallfileurl;
