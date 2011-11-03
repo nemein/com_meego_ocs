@@ -96,8 +96,9 @@ class com_meego_ocs_OCSWriter extends XMLWriter
 
             $dispatcher = midgardmvc_core::get_instance()->dispatcher;
 
-            foreach ($package->attachments as $attachment)
             $counter = 0;
+
+            foreach ($package->attachments as $attachment)
             {
                 // check if attachment is YMP (ie. 1 click install file)
                 if ($attachment->mimetype == "text/x-suse-ymp")
