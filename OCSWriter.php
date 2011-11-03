@@ -88,10 +88,16 @@ class com_meego_ocs_OCSWriter extends XMLWriter
             $this->writeElement('x-distributionid',$package->repoosversionid);
             $this->writeElement('x-dependencyid',  $package->repoosuxid);
 
+            if (   isset($package->testing)
+                && $package->testing)
+            {
+                $this->writeElement('x-testing', true);
+            }
+
             $dispatcher = midgardmvc_core::get_instance()->dispatcher;
 
-            $counter = 0;
             foreach ($package->attachments as $attachment)
+            $counter = 0;
             {
                 // check if attachment is YMP (ie. 1 click install file)
                 if ($attachment->mimetype == "text/x-suse-ymp")

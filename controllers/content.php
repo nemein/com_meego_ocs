@@ -40,7 +40,7 @@ class com_meego_ocs_controllers_content
     }
 
     /**
-     * Returns "dependencies", ie. various OS releases, ie. meego 1.2
+     * Returns "distributions", ie. various OS releases, ie. meego 1.2
      *
      * @param array HTTP GET args
      */
@@ -275,6 +275,17 @@ class com_meego_ocs_controllers_content
                     if ($package->packageversion <= $localpackages[$package->packagetitle]->packageversion)
                     {
                         continue;
+                    }
+                }
+
+                // set a special flag if the package is from a testing repository
+                $package->testing = false;
+
+                foreach ($this->mvc->configuration->top_projects as $top_project)
+                {
+                    if ($top_project['staging'] == $package->repoprojectname)
+                    {
+                        $package->testing = true;
                     }
                 }
 
