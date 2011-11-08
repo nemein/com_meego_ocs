@@ -178,11 +178,13 @@ class com_meego_ocs_controllers_content
                                   break;
                     case 'high' :
                                   $q->add_order(
-                                      new midgard_query_property('packagescore'),
+                                      new midgard_query_property('statscachedratings'),
                                       SORT_DESC);
                                   break;
                     case 'down' :
-                                  echo "* TODO *";
+                                  $q->add_order(
+                                      new midgard_query_property('statscachedratings'),
+                                      SORT_ASC);
                                   break;
                     default     :
                                   throw new midgardmvc_exception_notfound("Unknown sort mode.");
