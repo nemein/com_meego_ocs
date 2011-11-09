@@ -77,7 +77,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
             $this->writeElement('homepage',        $package->packagehomepageurl);
             $this->writeElement('created',         $package->packagecreated);
             $this->writeElement('changed',         $package->packagerevised);
-            $this->writeElement('score',           $package->statscachedratings);
+            $this->writeElement('score',           20 * $package->statscachedratingvalue);
             $this->writeElement('x-filename',      $package->packagefilename);
             $this->writeElement('x-license',       $package->packagelicense);
             $this->writeElement('x-arch',          $package->repoarch);
