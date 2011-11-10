@@ -27,6 +27,7 @@ class com_meego_ocs_controllers_content
     public function get_categories(array $args)
     {
         $q = new midgard_query_select(new midgard_query_storage('com_meego_package_basecategory'));
+        $q->add_order(new midgard_query_property('name'), SORT_ASC);
         $q->execute();
 
         $ocs = new com_meego_ocs_OCSWriter();
@@ -47,6 +48,7 @@ class com_meego_ocs_controllers_content
     public function get_distributions(array $args)
     {
         $q = new midgard_query_select(new midgard_query_storage('com_meego_os'));
+        $q->add_order(new midgard_query_property('name'), SORT_ASC);
         $q->execute();
 
         $total = $q->get_results_count();
@@ -171,11 +173,6 @@ class com_meego_ocs_controllers_content
                                       new midgard_query_property('packagerevised'),
                                       SORT_DESC);
                                   break;
-                    case 'alpha':
-                                  $q->add_order(
-                                      new midgard_query_property('packagename'),
-                                      SORT_ASC);
-                                  break;
                     case 'high' :
                                   $q->add_order(
                                       new midgard_query_property('statscachedratings'),
@@ -186,8 +183,11 @@ class com_meego_ocs_controllers_content
                                       new midgard_query_property('statscachedratings'),
                                       SORT_ASC);
                                   break;
+                    case 'alpha':
                     default     :
-                                  throw new midgardmvc_exception_notfound("Unknown sort mode.");
+                                  $q->add_order(
+                                      new midgard_query_property('packagename'),
+                                      SORT_ASC);
                                   break;
                 }
             }
