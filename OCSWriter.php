@@ -100,10 +100,10 @@ class com_meego_ocs_OCSWriter extends XMLWriter
 
             $counter = 0;
 
+            $_downloadurl = '';//$package->packageinstallfileurl;
+
             foreach ($package->attachments as $attachment)
             {
-                $_downloadurl = '';//$package->packageinstallfileurl;
-
                 // check if attachment is YMP (ie. 1 click install file)
                 if ($attachment->mimetype == "text/x-suse-ymp")
                 {
