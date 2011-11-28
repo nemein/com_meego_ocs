@@ -102,6 +102,8 @@ class com_meego_ocs_OCSWriter extends XMLWriter
 
             foreach ($package->attachments as $attachment)
             {
+                $_downloadurl = '';//$package->packageinstallfileurl;
+
                 // check if attachment is YMP (ie. 1 click install file)
                 if ($attachment->mimetype == "text/x-suse-ymp")
                 {
@@ -194,15 +196,6 @@ class com_meego_ocs_OCSWriter extends XMLWriter
             {
                 $this->writeElement('commentspage', $package->commentsurl);
             }
-
-            // figure out the one click install file URL
-            /**
-              $_downloadurl = '';
-              if (substr($package->packageinstallfileurl, 0, 4) == 'http')
-              {
-                  $_downloadurl = $package->packageinstallfileurl;
-              }
-            */
 
             $this->writeElement('downloadname1', $package->packagename);
             $this->writeElement('downloadlink1', $_downloadurl);

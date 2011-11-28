@@ -30,10 +30,12 @@ class com_meego_ocs_controllers_content
         $q->add_order(new midgard_query_property('name'), SORT_ASC);
         $q->execute();
 
+        $allcategories = $q->list_objects();
+
         $ocs = new com_meego_ocs_OCSWriter();
 
-        $ocs->writeMeta($q->get_results_count(), $this->pagesize);
-        $ocs->writeCategories($q->list_objects());
+        $ocs->writeMeta(count($allcategories), $this->pagesize);
+        $ocs->writeCategories($allcategories);
 
         $ocs->endDocument();
 
@@ -201,6 +203,13 @@ class com_meego_ocs_controllers_content
                 new midgard_query_value($args['id'])
             );
         }
+
+        // filter out hidden packages, since we no longer delete them
+        $constraints[] = new midgard_query_constraint(
+            new midgard_query_property('packagehidden'),
+            '=',
+            new midgard_query_value(0)
+        );
 
         $qc = null;
 
