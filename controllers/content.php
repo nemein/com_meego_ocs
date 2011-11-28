@@ -177,14 +177,18 @@ class com_meego_ocs_controllers_content
                                   break;
                     case 'high' :
                                   $q->add_order(
-                                      new midgard_query_property('statscachedratings'),
+                                      new midgard_query_property('statscachedratingvalue'),
                                       SORT_DESC);
-                                  break;
-                    case 'down' :
+                                  //sort by name too
                                   $q->add_order(
-                                      new midgard_query_property('statscachedratings'),
+                                      new midgard_query_property('packagename'),
                                       SORT_ASC);
-                                  break;
+                                break;
+                    case 'down' :
+                                  //sort by name too
+                                  $q->add_order(
+                                      new midgard_query_property('statscachedratingvalue'),
+                                      SORT_ASC);
                     case 'alpha':
                     default     :
                                   $q->add_order(
