@@ -135,7 +135,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
                                 'attachmentserver_variant',
                                 array(
                                     'guid' => $attachment->guid,
-                                    'variant' => 'sidesquare',
+                                    'variant' => 'prop480x300',
                                     'filename' => $attachment->name,
                                 ),
                                 '/'

@@ -215,6 +215,16 @@ class com_meego_ocs_controllers_content
             new midgard_query_value(0)
         );
 
+        // filter packages that are not needed in the result set
+        foreach ($this->mvc->configuration->sql_package_filters as $filter)
+        {
+            $constraints[] = new midgard_query_constraint(
+                new midgard_query_property('packagename'),
+                'NOT LIKE',
+                new midgard_query_value($filter)
+            );
+        }
+
         $qc = null;
 
         if (count($constraints) > 1)
@@ -281,37 +291,6 @@ class com_meego_ocs_controllers_content
 
             foreach ($packages as $package)
             {
-                // filtering
-                $filtered = false;
-
-                // filter packages by their titles (see configuration: package_filters)
-                foreach ($this->mvc->configuration->package_filters as $filter)
-                {
-                    if (   ! $filtered
-                        && preg_match($filter, $package->packagename))
-                    {
-                        $filtered = true;
-                    }
-                }
-
-                if ($filtered)
-                {
-                    --$total;
-                    continue;
-                }
-
-                // need to group the packages so that they appear as applications
-                // for that we need an associative array
-                if (array_key_exists($package->packagetitle, $localpackages))
-                {
-                    // if there are multiple version of the same packages then we
-                    // should keep the latest only
-                    if ($package->packageversion <= $localpackages[$package->packagetitle]->packageversion)
-                    {
-                        continue;
-                    }
-                }
-
                 // set a special flag if the package is from a testing repository
                 $package->testing = false;
 
