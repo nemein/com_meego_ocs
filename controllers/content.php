@@ -109,6 +109,48 @@ class com_meego_ocs_controllers_content
         $storage = new midgard_query_storage('com_meego_package_details');
         $q = new midgard_query_select($storage);
 
+        $qc = new midgard_query_constraint_group('OR');
+
+        // filter all hidden packages
+        $qc->add_constraint(new midgard_query_constraint(
+            new midgard_query_property('packagehidden'),
+            '=',
+            new midgard_query_value(1)
+        ));
+
+        // filter packages by their names
+        foreach ($this->mvc->configuration->sql_package_filters as $filter)
+        {
+            $qc->add_constraint(new midgard_query_constraint(
+                new midgard_query_property('packagename'),
+                'LIKE',
+                new midgard_query_value($filter)
+            ));
+            $qc->add_constraint(new midgard_query_constraint(
+                new midgard_query_property('packagetitle'),
+                'LIKE',
+                new midgard_query_value($filter)
+            ));
+        }
+        $q->set_constraint($qc);
+        $q->execute();
+
+        $filtered = array();
+
+        foreach ($q->list_objects() as $package)
+        {
+            $filtered[] = $package->packageid;
+        }
+
+        if (count($filtered))
+        {
+            $constraints[] = new midgard_query_constraint(
+                new midgard_query_property('packageid'),
+                'NOT IN',
+                new midgard_query_value($filtered)
+            );
+        }
+
         if (count($query))
         {
             if (   array_key_exists('search', $query)
@@ -205,23 +247,6 @@ class com_meego_ocs_controllers_content
                 new midgard_query_property('packageid'),
                 '=',
                 new midgard_query_value($args['id'])
-            );
-        }
-
-        // filter out hidden packages, since we no longer delete them
-        $constraints[] = new midgard_query_constraint(
-            new midgard_query_property('packagehidden'),
-            '=',
-            new midgard_query_value(0)
-        );
-
-        // filter packages that are not needed in the result set
-        foreach ($this->mvc->configuration->sql_package_filters as $filter)
-        {
-            $constraints[] = new midgard_query_constraint(
-                new midgard_query_property('packagename'),
-                'NOT LIKE',
-                new midgard_query_value($filter)
             );
         }
 
