@@ -157,10 +157,10 @@ class com_meego_ocs_OCSWriter extends XMLWriter
                         $this->writeElement('previewpic'.$counter,      $_screenshoturl);
                         $this->writeElement('smallpreviewpic'.$counter, $_smallscreenshoturl);
 
-                        if ($counter == 3)
-                        {
-                            break;
-                        }
+                        #if ($counter == 3)
+                        #{
+                        #    break;
+                        #}
                     }
 
                     // check if the name is *icon.png and generate <icon> elements
