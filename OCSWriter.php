@@ -67,6 +67,8 @@ class com_meego_ocs_OCSWriter extends XMLWriter
 
         foreach ($packages as $package)
         {
+            $mvc = midgardmvc_core::get_instance();
+
             $this->startElement('content');
             $this->writeAttribute('details','full');
             $this->writeElement('id',              $package->packageid);
@@ -102,10 +104,18 @@ class com_meego_ocs_OCSWriter extends XMLWriter
 
             $_downloadurl = '';//$package->packageinstallfileurl;
 
+            // set a different downloadurl in case the configured download schema for this OS is 'apps'
+            if (   array_key_exists('download', $mvc->configuration->os_ux[$package->repoos])
+                && $mvc->configuration->os_ux[$package->repoos]['download'] == 'apps')
+            {
+                $_downloadurl = 'apps://' . $package->packageid;
+            }
+
             foreach ($package->attachments as $attachment)
             {
                 // check if attachment is YMP (ie. 1 click install file)
-                if ($attachment->mimetype == "text/x-suse-ymp")
+                if (   $attachment->mimetype == "text/x-suse-ymp"
+                    && ! strlen($_downloadurl))
                 {
                     $_downloadurl = com_meego_ocs_controllers_providers::generate_url(
                         $dispatcher->generate_url(
@@ -178,7 +188,6 @@ class com_meego_ocs_OCSWriter extends XMLWriter
                             )
                         );
 
-                        $mvc = midgardmvc_core::get_instance();
                         $iconwidth = $mvc->configuration->attachmentserver_variants['icon']['croppedThumbnail']['width'];
                         $iconheight = $mvc->configuration->attachmentserver_variants['icon']['croppedThumbnail']['height'];
                         $this->startElement('icon');
