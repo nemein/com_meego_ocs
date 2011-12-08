@@ -104,13 +104,6 @@ class com_meego_ocs_OCSWriter extends XMLWriter
 
             $_downloadurl = '';//$package->packageinstallfileurl;
 
-            // set a different downloadurl in case the configured download schema for this OS is 'apps'
-            if (   array_key_exists('download', $mvc->configuration->os_ux[$package->repoos])
-                && $mvc->configuration->os_ux[$package->repoos]['download'] == 'apps')
-            {
-                $_downloadurl = 'apps://' . $package->packageid;
-            }
-
             foreach ($package->attachments as $attachment)
             {
                 // check if attachment is YMP (ie. 1 click install file)
