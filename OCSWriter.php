@@ -91,6 +91,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
             $this->writeElement('x-licenseid',     $package->packagelicenseid);
             $this->writeElement('x-distributionid',$package->repoosversionid);
             $this->writeElement('x-dependencyid',  $package->repoosuxid);
+            $this->writeElement('x-obsname',       $package->packageparent);
 
             if (   isset($package->testing)
                 && $package->testing)
