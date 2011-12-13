@@ -370,6 +370,15 @@ class com_meego_ocs_controllers_content
                     $package->commentsurl = com_meego_ocs_controllers_providers::generate_url($path);
                 }
 
+                // get the roles
+                $package->roles = '';
+                $roles = com_meego_packages_controllers_application::get_roles($package->packageguid);
+
+                if (count($roles))
+                {
+                    $package->roles = serialize($roles);
+                }
+
                 $localpackages[] = $package;
             }
 
