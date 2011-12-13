@@ -214,7 +214,7 @@ class com_meego_ocs_controllers_content
                 {
                     case 'new'  :
                                   $q->add_order(
-                                      new midgard_query_property('packagerevised'),
+                                      new midgard_query_property('packagecreated'),
                                       SORT_DESC);
                                   break;
                     case 'high' :
