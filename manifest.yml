@@ -83,7 +83,7 @@ routes:
 #        controller: com_meego_ocs_controllers_content
 #        action: recommendations
     comments_get:
-        path: /v1/comments/data/{$type}/{$contentid1}
+        path: /v1/comments/data/{$type}/{$contentid1}/{$contentid2}
         controller: com_meego_ocs_controllers_comments
         action: get
     comments_add:
