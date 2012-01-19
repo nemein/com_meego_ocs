@@ -16,26 +16,26 @@ class com_meego_ocs_controllers_comments
             throw new midgardmvc_exception_notfound("Only CONTENT type supported");
         }
 
-        if ($args['contentid2'] != 0)
-        {
-            throw new midgardmvc_exception_notfound("No subcontent available");
-        }
-
         $primary = new com_meego_package();
         $primary->get_by_id((int) $args['contentid1']);
 
         $storage = new midgard_query_storage('com_meego_comments_comment');
         $q = new midgard_query_select($storage);
-        $q->set_constraint
-        (
-            new midgard_query_constraint
-            (
-                new midgard_query_property('to', $storage),
-                '=',
-                new midgard_query_value($primary->guid)
-            )
-        );
 
+        $qc = new midgard_query_constraint_group('AND');
+
+        $qc->add_constraint(new midgard_query_constraint(
+            new midgard_query_property('metadata.creator'),
+            '<>',
+            new midgard_query_value('')
+        ));
+        $qc->add_constraint(new midgard_query_constraint(
+            new midgard_query_property('to'),
+            '=',
+            new midgard_query_value($primary->guid)
+        ));
+
+        $q->set_constraint($qc);
         $q->add_order(new midgard_query_property('metadata.created', $storage), SORT_ASC);
 
         // First run a query of the whole set to get results count
@@ -49,13 +49,13 @@ class com_meego_ocs_controllers_comments
         $q->execute();
 
         $comments = $q->list_objects();
-        $comments_tree = array(); // <-- FIXME
 
         $ocs = new com_meego_ocs_OCSWriter();
         $ocs->writeMeta($cnt);
 
         $ocs->startElement('data');
-        foreach ($comments_tree as $comment)
+
+        foreach ($comments as $comment)
         {
             $this->comment_to_ocs($comment, $ocs);
         }
@@ -91,6 +91,9 @@ class com_meego_ocs_controllers_comments
         $ocs->writeElement('id', $comment->id);
         $ocs->writeElement('subject', $comment->title);
         $ocs->writeElement('text', $comment->content);
+
+        // no support of subcomments yet
+        /*
         $comments = count($comment->subcomments);
         $ocs->writeElement('childcount', $comments);
         if ($comments > 0)
@@ -102,8 +105,14 @@ class com_meego_ocs_controllers_comments
             }
             $ocs->endElement();
         }
-
-        $ocs->writeElement('user', '');
+        */
+        $userid = '';
+        $user = com_meego_packages_utils::get_user_by_person_guid($comment->metadata->creator);
+        if ($user)
+        {
+            $userid = $user->login;
+        }
+        $ocs->writeElement('user', $userid);
         $ocs->writeElement('date', $comment->metadata->created->format('c'));
         $ocs->writeElement('score', $comment->metadata->score);
         $ocs->endElement();
