@@ -508,10 +508,11 @@ class com_meego_ocs_controllers_content
      */
     public function post_vote(array $args)
     {
-        // Voting requires basic auth
-        $basic_auth = new midgardmvc_core_services_authentication_basic();
-        $e = new Exception("Vote posting requires Basic authentication");
-        $basic_auth->handle_exception($e);
+        // Voting requires authentication
+        if (! com_meego_ocs_utils::authenticate($args))
+        {
+            return null;
+        }
 
         $ocs = new com_meego_ocs_OCSWriter();
 

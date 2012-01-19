@@ -114,12 +114,13 @@ class com_meego_ocs_controllers_comments
      */
     public function post_add(array $args)
     {
-        $ocs = new com_meego_ocs_OCSWriter();
+        // Voting requires authentication
+        if (! com_meego_ocs_utils::authenticate($args))
+        {
+            return null;
+        }
 
-        // Commenting requires basic auth
-        $basic_auth = new midgardmvc_core_services_authentication_basic();
-        $e = new Exception("Comment posting requires Basic authentication");
-        $basic_auth->handle_exception($e);
+        $ocs = new com_meego_ocs_OCSWriter();
 
         $required_params = array
         (

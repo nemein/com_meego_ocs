@@ -6,3 +6,5 @@ ocs_protocol: https
 ocs_host: apps.formeego.org
 # port number
 ocs_port: 443
+# OCS authentication method: basic (HTTP) or LDAP
+ocs_authentication: LDAP
