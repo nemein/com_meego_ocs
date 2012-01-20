@@ -223,7 +223,7 @@ class com_meego_ocs_controllers_content
                                       SORT_DESC);
                                   //sort by name too
                                   $q->add_order(
-                                      new midgard_query_property('packagename'),
+                                      new midgard_query_property('packagetitle'),
                                       SORT_ASC);
                                 break;
                     case 'down' :
@@ -234,7 +234,7 @@ class com_meego_ocs_controllers_content
                     case 'alpha':
                     default     :
                                   $q->add_order(
-                                      new midgard_query_property('packagename'),
+                                      new midgard_query_property('packagetitle'),
                                       SORT_ASC);
                                   break;
                 }
