@@ -554,7 +554,7 @@ class com_meego_ocs_controllers_content
 
     private static function output_xml($xml)
     {
-        midgardmvc_core::get_instance()->dispatcher->header('Content-type: application/xml');
+        midgardmvc_core::get_instance()->dispatcher->header('Content-type: application/xml; charset=utf-8');
         echo $xml->outputMemory(true);
 
         midgardmvc_core::get_instance()->dispatcher->end_request();
