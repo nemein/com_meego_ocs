@@ -5,6 +5,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
     public function __construct()
     {
         $this->openMemory();
+        parent::startDocument('1.0', 'UTF-8');
         $this->startElement('ocs');
     }
 
