@@ -108,7 +108,7 @@ class com_meego_ocs_controllers_comments
     {
         $ocs->startElement('comment');
         $ocs->writeElement('id', $rating->commentid);
-        $ocs->writeElement('subject', $rating->title);
+        $ocs->writeElement('subject', $rating->version . ':' . $rating->title);
         $ocs->writeElement('text', $rating->comment);
 
         // todo: no support of subcomments yet
