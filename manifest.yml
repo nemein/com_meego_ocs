@@ -90,3 +90,7 @@ routes:
         path: /v1/comments/add
         controller: com_meego_ocs_controllers_comments
         action: add
+    person_check:
+        path: /v1/person/check
+        controller: com_meego_ocs_controllers_person
+        action: check

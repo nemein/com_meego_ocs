@@ -7,6 +7,30 @@
  */
 class com_meego_ocs_utils
 {
+    public function prepare_tokens($args = null)
+    {
+        $tokens = array('login' => '', 'password' => '');
+
+        if (isset($_SERVER['HTTP_AUTHORIZATION']))
+        {
+            //prepare tokens from Basic Auth header
+            $auth_params = explode(":", base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
+            $tokens['login'] = $auth_params[0];
+            unset($auth_params[0]);
+            $tokens['password'] = implode('', $auth_params);
+        }
+        else if (isset($_POST['login']))
+        {
+            $tokens['login'] = $_POST['login'];
+            if (isset($_POST['password']))
+            {
+                $tokens['password'] = $_POST['password'];
+            }
+        }
+
+        return $tokens;
+    }
+
     public function authenticate($args = null)
     {
         $auth = null;
@@ -19,13 +43,8 @@ class com_meego_ocs_utils
         switch (midgardmvc_core::get_instance()->configuration->ocs_authentication)
         {
             case 'LDAP':
-                $tokens = array('login' => '', 'password' => '');
-                //prepare tokens from Basic Auth header
-                $auth_params = explode(":", base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
-                $tokens['login'] = $auth_params[0];
-                unset($auth_params[0]);
-                $tokens['password'] = implode('', $auth_params);
-                $auth = com_meego_ocs_utils::ldap_auth($tokens);
+                $tokens = self::prepare_tokens();
+                $auth = self::ldap_auth($tokens);
                 break;
             case 'basic':
             default:
@@ -38,7 +57,7 @@ class com_meego_ocs_utils
     }
 
     /**
-     * Returns the curretnly logged in user's object
+     * Returns the currently logged in user's object
      *
      * @return object midgard_user object of the current user
      */
@@ -52,5 +71,24 @@ class com_meego_ocs_utils
             return $ldap->create_login_session($tokens, null);
         }
         return null;
+    }
+
+    /**
+     * Indicates if an account is valid or not
+     *
+     * @return bollean true: valid account; false: invalid account
+     */
+    public static function ldap_check($tokens = null)
+    {
+        $retval = null;
+
+        if (   is_array($tokens)
+            && array_key_exists('login', $tokens))
+        {
+            $ldap = new com_meego_packages_services_authentication_ldap();
+            $retval = $ldap->ldap_check($tokens);
+        }
+
+        return $retval;
     }
 }
