@@ -18,14 +18,20 @@ class com_meego_ocs_OCSWriter extends XMLWriter
     /**
      * Dumps meta element
      */
-    public function writeMeta($totalitems, $itemsperpage = '100', $message = '', $status = 'ok', $statuscode = '100')
+    public function writeMeta($totalitems = null, $itemsperpage = null, $message = '', $status = 'ok', $statuscode = '100')
     {
         $this->startElement('meta');
         $this->writeElement('status', $status);
         $this->writeElement('statuscode', $statuscode);
         $this->writeElement('message', $message);
-        $this->writeElement('totalitems', $totalitems);
-        $this->writeElement('itemsperpage', $itemsperpage);
+        if ($totalitems)
+        {
+            $this->writeElement('totalitems', $totalitems);
+        }
+        if ($itemsperpage)
+        {
+            $this->writeElement('itemsperpage', $itemsperpage);
+        }
         $this->endElement(); // meta
     }
 
@@ -273,6 +279,33 @@ class com_meego_ocs_OCSWriter extends XMLWriter
     public function writeEmptyData()
     {
         $this->startElement('data');
+        $this->endElement(); // data
+    }
+
+    /**
+     * Writes a person check element
+     *
+     *   <person details="check">
+     *      <personid>login</personid>
+     *      <x-email>email</x-email>
+     *    </person>
+     */
+    public function writePersonCheck($login = null, $email = null)
+    {
+        if (! $login)
+        {
+            return;
+        }
+
+        $this->startElement('data');
+        $this->startElement('person');
+        $this->writeAttribute('details', 'check');
+        $this->writeElement('personid', $login);
+        if ($email)
+        {
+            $this->writeElement('x-email', $email);
+        }
+        $this->endElement(); // person
         $this->endElement(); // data
     }
 }
