@@ -140,13 +140,6 @@ class com_meego_ocs_controllers_comments
 
         $ocs = new com_meego_ocs_OCSWriter();
 
-        $required_params = array
-        (
-            'type',
-            'content',
-            'message',
-        );
-
         if (! isset($_POST['content']))
         {
             $ocs->writeError('Content must not be empty', 101);
