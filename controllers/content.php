@@ -311,11 +311,19 @@ class com_meego_ocs_controllers_content
 
         if ($total > 0)
         {
+            $packageids = array();
             $localpackages = array();
             $packages = $q->list_objects();
 
             foreach ($packages as $package)
             {
+                if (in_array($package->packageid, $packageids))
+                {
+                    // mimic distinct (Midgard Ratatoskr does not support it on SQL level)
+                    --$total;
+                    continue;
+                }
+
                 // set a special flag if the package is from a testing repository
                 $package->testing = false;
 
@@ -380,11 +388,14 @@ class com_meego_ocs_controllers_content
                 }
 
                 $localpackages[] = $package;
+                $packageids[] = $package->packageid;
             }
+
 
             // write the xml content
             $ocs->writeMeta($total, $this->pagesize);
             $ocs->writeContent(array_values($localpackages));
+            unset($packageids, $localpackages);
         }
         else
         {
@@ -394,7 +405,6 @@ class com_meego_ocs_controllers_content
         }
 
         $ocs->endDocument();
-
         self::output_xml($ocs);
     }
 
