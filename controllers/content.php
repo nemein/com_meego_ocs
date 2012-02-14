@@ -559,6 +559,9 @@ class com_meego_ocs_controllers_content
                 throw new midgardmvc_exception_notfound("Could not create rating object");
             }
 
+            $args = array('to' => $rating->to);
+            com_meego_ratings_caching_controllers_rating::calculate_average($args);
+
             $ocs->writeMeta(0);
 
         }
