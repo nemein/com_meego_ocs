@@ -541,6 +541,10 @@ class com_meego_ocs_controllers_content
 
             $vote = $_POST['vote'];
 
+            // incoming votes are ranging between 0 and 100
+            // our internal scale is different: 0 - 5
+            $vote = round($vote / 20);
+
             if ($vote > $this->mvc->configuration->maxrate)
             {
                 $vote = $this->mvc->configuration->maxrate;
