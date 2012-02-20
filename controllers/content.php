@@ -386,11 +386,27 @@ class com_meego_ocs_controllers_content
                 {
                     $package->roles = serialize($roles);
                 }
+                // get the voters (who rated the package)
+                $package->ratings = '';
+                $ratings = com_meego_packages_controllers_application::prepare_ratings($package->packagename, true);
+
+                if (count($ratings['ratings']))
+                {
+                    foreach ($ratings['ratings'] as $rating)
+                    {
+                        $ratings_[] = array(
+                            'user' => $rating->user,
+                            'version' => $rating->version,
+                            'rate' => $rating->rating,
+                            'date' => $rating->date
+                        );
+                    }
+                    $package->ratings = serialize($ratings_);
+                }
 
                 $localpackages[] = $package;
                 $packageids[] = $package->packageid;
             }
-
 
             // write the xml content
             $ocs->writeMeta($total, $this->pagesize);
@@ -528,6 +544,15 @@ class com_meego_ocs_controllers_content
 
         $primary = new com_meego_package();
         $primary->get_by_id((int) $args['contentid']);
+
+        if (! $this->mvc->configuration->allow_multiple_voting)
+        {
+            // check if user has voted already
+//            if ()
+//            {
+//                $ocs->writeError('Multiple voting not allowed and user has already voted this object.', 102);
+//            }
+        }
 
         if (! $primary->guid)
         {
