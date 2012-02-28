@@ -534,62 +534,75 @@ class com_meego_ocs_controllers_content
      */
     public function post_vote(array $args)
     {
+        $ocs = new com_meego_ocs_OCSWriter();
+
         // Voting requires authentication
         if (! com_meego_ocs_utils::authenticate($args))
         {
-            return null;
-        }
-
-        $ocs = new com_meego_ocs_OCSWriter();
-
-        $primary = new com_meego_package();
-        $primary->get_by_id((int) $args['contentid']);
-
-        if (! $this->mvc->configuration->allow_multiple_voting)
-        {
-            // check if user has voted already
-//            if ()
-//            {
-//                $ocs->writeError('Multiple voting not allowed and user has already voted this object.', 102);
-//            }
-        }
-
-        if (! $primary->guid)
-        {
-            $ocs->writeError('Content not found', 101);
+            // extend the OCS spec with a custom status code
+            $this->mvc->log(__CLASS__, 'Attempt to vote by anonymous. No luck.', 'info');
+            $ocs->writeError('Voting requires authentication. Please login first.', 102);
         }
         else
         {
-            $rating = new com_meego_ratings_rating();
+            $primary = new com_meego_package();
+            $primary->get_by_id((int) $args['contentid']);
 
-            $rating->to = $primary->guid;
-
-            $vote = $_POST['vote'];
-
-            // incoming votes are ranging between 0 and 100
-            // our internal scale is different: 0 - 5
-            $vote = round($vote / 20);
-
-            if ($vote > $this->mvc->configuration->maxrate)
+            if (! $primary->guid)
             {
-                $vote = $this->mvc->configuration->maxrate;
+                $this->mvc->log(__CLASS__, 'Package with id:  (with id:' . $args['contentid'] . ') can not be found', 'info');
+                $ocs->writeError('Content not found', 101);
             }
-
-            $rating->rating = $vote;
-            // for votes only we have no comments
-            $rating->comment = 0;
-
-            if (! $rating->create())
+            else
             {
-                throw new midgardmvc_exception_notfound("Could not create rating object");
+                $voted = false;
+                $user = com_meego_ocs_utils::get_current_user();
+
+                // the multiple voting is configurable, pls check the config file
+                if (! $this->mvc->configuration->allow_multiple_voting)
+                {
+                    // if not allowed then check if the user has voted already
+                    if (com_meego_ocs_utils::user_has_voted($primary->id, $user->person))
+                    {
+                        $this->mvc->log(__CLASS__, "$user->login has already voted for $primary->name (with id: $primary->id) and multiple votings are disabled", 'info');
+                        $ocs->writeError('Multiple voting not allowed and user has already voted this object.', 103);
+                    }
+                }
+
+                if (! $ocs->error)
+                {
+                    $rating = new com_meego_ratings_rating();
+                    $rating->to = $primary->guid;
+                    $vote = $_POST['vote'];
+
+                    // incoming votes are ranging between 0 and 100
+                    // our internal scale is different: 0 - 5
+                    $vote = round($vote / 20);
+
+                    if ($vote > $this->mvc->configuration->maxrate)
+                    {
+                        $vote = $this->mvc->configuration->maxrate;
+                    }
+
+                    $rating->rating = $vote;
+                    // for votes only we have no comments
+                    $rating->comment = 0;
+
+                    if (! $rating->create())
+                    {
+                        $this->mvc->log(__CLASS__, 'Failed to create rating object. User: ' . $user->login . ', application: ' . $primary->name . ' (with id: ' . $primary->id . ')', 'info');
+                        throw new midgardmvc_exception_notfound("Could not create rating object");
+                    }
+
+                    $args = array('to' => $rating->to);
+                    com_meego_ratings_caching_controllers_rating::calculate_average($args);
+
+                    $ocs->writeMeta(0);
+                }
             }
-
-            $args = array('to' => $rating->to);
-            com_meego_ratings_caching_controllers_rating::calculate_average($args);
-
-            $ocs->writeMeta(0);
-
+            $this->mvc->log(__CLASS__, 'Rating (' . $rating->rating . ') submitted by ' . $user->login . ' for ' . $primary->name . ' (with id: ' . $primary->id . ')', 'info');
         }
+
         $ocs->endDocument();
         self::output_xml($ocs);
     }
