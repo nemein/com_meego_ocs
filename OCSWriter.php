@@ -2,15 +2,19 @@
 
 class com_meego_ocs_OCSWriter extends XMLWriter
 {
+    public $error = false;
+
     public function __construct()
     {
         $this->openMemory();
         parent::startDocument('1.0', 'UTF-8');
         $this->startElement('ocs');
+        $this->error = false;
     }
 
     public function endDocument()
     {
+        $this->error = false;
         $this->endElement(); // ocs
         parent::endDocument();
     }
@@ -40,6 +44,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
      */
     public function writeError($message = '', $statuscode = '101')
     {
+        $this->error = true;
         $this->startElement('meta');
         $this->writeElement('status', 'nok');
         $this->writeElement('statuscode', $statuscode);
@@ -100,7 +105,19 @@ class com_meego_ocs_OCSWriter extends XMLWriter
             $this->writeElement('x-distributionid',$package->repoosversionid);
             $this->writeElement('x-dependencyid',  $package->repoosuxid);
             $this->writeElement('x-obsname',       $package->packageparent);
-            $this->writeElement('x-ratings',       $package->ratings);
+
+            $user = com_meego_ocs_utils::get_current_user();
+            if ($user)
+            {
+                if (com_meego_ocs_utils::user_has_voted($package->packageid, $user->person))
+                {
+                    $this->writeElement('x-rated', 'true');
+                }
+                else
+                {
+                    $this->writeElement('x-rated', 'false');
+                }
+            }
 
             if (   isset($package->testing)
                 && $package->testing)
