@@ -7,6 +7,22 @@
  */
 class com_meego_ocs_utils
 {
+    /**
+     * Returns the curretnly logged in user's object
+     *
+     * @return object midgard_user object of the current user
+     */
+    public static function get_current_user()
+    {
+        $mvc = midgardmvc_core::get_instance();
+        return $mvc->authentication->get_user();
+    }
+
+    /**
+     * Prepares proper login and password elements for authentication
+     *
+     * @return array
+     */
     public function prepare_tokens($args = null)
     {
         $tokens = array('login' => '', 'password' => '');
@@ -31,6 +47,14 @@ class com_meego_ocs_utils
         return $tokens;
     }
 
+    /**
+     * Performs authentication
+     *
+     * Limitation: only LDAP auth is supported properly at the moment
+     *
+     * @param array with login name and password
+     * @return array with authentication info
+     */
     public function authenticate($args = null)
     {
         $auth = null;
@@ -68,7 +92,8 @@ class com_meego_ocs_utils
             && array_key_exists('password', $tokens))
         {
             $ldap = new com_meego_packages_services_authentication_ldap();
-            return $ldap->create_login_session($tokens, null);
+            $session = $ldap->create_login_session($tokens, null);
+            return $session;
         }
         return null;
     }
@@ -87,6 +112,71 @@ class com_meego_ocs_utils
         {
             $ldap = new com_meego_packages_services_authentication_ldap();
             $retval = $ldap->ldap_check($tokens);
+        }
+
+        return $retval;
+    }
+
+    /**
+     * Checks if a user has rated a certain package
+     * @param integer package id
+     * @param guid of the user
+     *
+     * @return boolean true: if user has rated, false otherwise
+     */
+    public function user_has_voted($application_id = null, $author_guid = null)
+    {
+        $retval = false;
+
+        if (! $application_id)
+        {
+            // throw an exception or something..
+            return null;
+        }
+
+        if (! $author_guid)
+        {
+            // ok, get the current user then
+            $user = $this->get_current_user();
+
+            if (! $user)
+            {
+                // not logged in, to bad
+                return null;
+            }
+            $author_guid = $user->person;
+        }
+
+        // query select
+        $storage = new midgard_query_storage('com_meego_package_ratings');
+        $q = new midgard_query_select($storage);
+
+        $qc = new midgard_query_constraint_group('AND');
+
+        $qc->add_constraint(new midgard_query_constraint(
+            new midgard_query_property('id'),
+            '=',
+            new midgard_query_value($application_id)
+        ));
+        $qc->add_constraint(new midgard_query_constraint(
+            new midgard_query_property('commentid'),
+            '=',
+            new midgard_query_value(0)
+        ));
+        $qc->add_constraint(new midgard_query_constraint(
+            new midgard_query_property('authorguid'),
+            '=',
+            new midgard_query_value($author_guid)
+        ));
+
+        $q->set_constraint($qc);
+        $q->execute();
+
+        $ratings = $q->list_objects();
+
+        if (count($ratings))
+        {
+            $retval = true;
         }
 
         return $retval;
