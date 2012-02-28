@@ -8,3 +8,5 @@ ocs_host: apps.formeego.org
 ocs_port: 443
 # OCS authentication method: basic (HTTP) or LDAP
 ocs_authentication: LDAP
+# whether user's can vote the same object multiple times
+allow_multiple_voting: false
