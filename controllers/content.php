@@ -598,9 +598,10 @@ class com_meego_ocs_controllers_content
                     com_meego_ratings_caching_controllers_rating::calculate_average($args);
 
                     $ocs->writeMeta(0);
+
+                    $this->mvc->log(__CLASS__, 'Rating (' . $rating->rating . ') submitted by ' . $user->login . ' for ' . $primary->name . ' (with id: ' . $primary->id . ')', 'info');
                 }
             }
-            $this->mvc->log(__CLASS__, 'Rating (' . $rating->rating . ') submitted by ' . $user->login . ' for ' . $primary->name . ' (with id: ' . $primary->id . ')', 'info');
         }
 
         $ocs->endDocument();
