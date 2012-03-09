@@ -431,6 +431,7 @@ class com_meego_ocs_controllers_content
                 }
 
                 // get workflows, if any
+                $package->qa = null;
                 $object = new com_meego_package($package->packageguid);
                 $workflows = midgardmvc_helper_workflow_utils::get_workflows_for_object($object);
 
@@ -468,15 +469,17 @@ class com_meego_ocs_controllers_content
                                 $fields = midgardmvc_ui_forms_generator::list_fields($form);
                                 foreach ($fields as $field)
                                 {
-                                    $_workflows[$name][$field->title][] = array(
-                                        'widget' => $field->widget,
-                                        'options' => $field->options
-                                    );
+                                    $_workflows[$name][$field->title]['widget'] = $field->widget;
+                                    $_workflows[$name][$field->title]['options'] = $field->options;
                                 }
                             }
                         }
                     }
-                    $package->qa = serialize($_workflows);
+
+                    if (count($_workflows))
+                    {
+                        $package->qa = serialize($_workflows);
+                    }
                 }
                 $localpackages[] = $package;
                 $packageids[] = $package->packageid;
