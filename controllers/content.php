@@ -430,6 +430,54 @@ class com_meego_ocs_controllers_content
                     $package->history = serialize($packagehistory);
                 }
 
+                // get workflows, if any
+                $object = new com_meego_package($package->packageguid);
+                $workflows = midgardmvc_helper_workflow_utils::get_workflows_for_object($object);
+
+                if (is_array($workflows))
+                {
+                    $this->mvc->component->load_library('Workflow');
+
+                    $_workflows = array();
+
+                    foreach ($workflows as $name => $workflow_data)
+                    {
+                        $args = array(
+                            'package' => $package->packagename,
+                            'version' => $package->packageversion,
+                            'project' => $package->repoprojectname,
+                            'repository' => $package->reponame,
+                            'arch' => $package->repoarch,
+                            'workflow' => $name
+                        );
+
+                        $workflow_definition = new $workflow_data['provider'];
+                        $values = $workflow_definition->start($object);
+                        $workflow = $workflow_definition->get();
+
+                        if (isset($values['execution']))
+                        {
+                            $args['execution'] = $values['execution'];
+
+                            $execution = new midgardmvc_helper_workflow_execution_interactive($workflow, $args['execution']);
+                            $variables = $execution->getVariables();
+
+                            if (isset($variables['review_form']))
+                            {
+                                $form = new midgardmvc_ui_forms_form($variables['review_form']);
+                                $fields = midgardmvc_ui_forms_generator::list_fields($form);
+                                foreach ($fields as $field)
+                                {
+                                    $_workflows[$name][$field->title][] = array(
+                                        'widget' => $field->widget,
+                                        'options' => $field->options
+                                    );
+                                }
+                            }
+                        }
+                    }
+                    $package->qa = serialize($_workflows);
+                }
                 $localpackages[] = $package;
                 $packageids[] = $package->packageid;
             }
