@@ -404,81 +404,84 @@ class com_meego_ocs_controllers_content
                     $package->ratings = serialize($ratings_);
                 }
 
-                //get history
-                $args = array(
-                    'os' => $package->repoos,
-                    'version' => $package->repoosversion,
-                    'ux' => $package->repoosux,
-                    'packagename' => $package->packagename
-                );
-
-                $package->history = null;
-
-                // set $this->data['packages']
-                com_meego_packages_controllers_application::get_history($args);
-
-                if (   is_array($this->data['packages'][$package->packagename]['all'])
-                    && count($this->data['packages'][$package->packagename]['all']))
+                if (isset($args['id']))
                 {
-                    $packagehistory = array();
+                    //get history
+                    $args = array(
+                        'os' => $package->repoos,
+                        'version' => $package->repoosversion,
+                        'ux' => $package->repoosux,
+                        'packagename' => $package->packagename
+                    );
 
-                    foreach ($this->data['packages'][$package->packagename]['all'] as $item)
+                    $package->history = null;
+
+                    // set $this->data['packages']
+                    com_meego_packages_controllers_application::get_history($args);
+
+                    if (   is_array($this->data['packages'][$package->packagename]['all'])
+                        && count($this->data['packages'][$package->packagename]['all']))
                     {
-                        $packagehistory[$item['type']][$item['released'] . ':' . $item['version']] = $item['packageid'];
+                        $packagehistory = array();
+
+                        foreach ($this->data['packages'][$package->packagename]['all'] as $item)
+                        {
+                            $packagehistory[$item['type']][$item['released'] . ':' . $item['version']] = $item['packageid'];
+                        }
+
+                        $package->history = serialize($packagehistory);
                     }
 
-                    $package->history = serialize($packagehistory);
-                }
+                    // get workflows, if any
+                    $package->qa = null;
+                    $object = new com_meego_package($package->packageguid);
+                    $workflows = midgardmvc_helper_workflow_utils::get_workflows_for_object($object);
 
-                // get workflows, if any
-                $package->qa = null;
-                $object = new com_meego_package($package->packageguid);
-                $workflows = midgardmvc_helper_workflow_utils::get_workflows_for_object($object);
-
-                if (is_array($workflows))
-                {
-                    $this->mvc->component->load_library('Workflow');
-
-                    $_workflows = array();
-
-                    foreach ($workflows as $name => $workflow_data)
+                    if (is_array($workflows))
                     {
-                        $args = array(
-                            'package' => $package->packagename,
-                            'version' => $package->packageversion,
-                            'project' => $package->repoprojectname,
-                            'repository' => $package->reponame,
-                            'arch' => $package->repoarch,
-                            'workflow' => $name
-                        );
+                        $this->mvc->component->load_library('Workflow');
 
-                        $workflow_definition = new $workflow_data['provider'];
-                        $values = $workflow_definition->start($object);
-                        $workflow = $workflow_definition->get();
+                        $_workflows = array();
 
-                        if (isset($values['execution']))
+                        foreach ($workflows as $name => $workflow_data)
                         {
-                            $args['execution'] = $values['execution'];
+                            $args = array(
+                                'package' => $package->packagename,
+                                'version' => $package->packageversion,
+                                'project' => $package->repoprojectname,
+                                'repository' => $package->reponame,
+                                'arch' => $package->repoarch,
+                                'workflow' => $name
+                            );
 
-                            $execution = new midgardmvc_helper_workflow_execution_interactive($workflow, $args['execution']);
-                            $variables = $execution->getVariables();
+                            $workflow_definition = new $workflow_data['provider'];
+                            $values = $workflow_definition->start($object);
+                            $workflow = $workflow_definition->get();
 
-                            if (isset($variables['review_form']))
+                            if (isset($values['execution']))
                             {
-                                $form = new midgardmvc_ui_forms_form($variables['review_form']);
-                                $fields = midgardmvc_ui_forms_generator::list_fields($form);
-                                foreach ($fields as $field)
+                                $args['execution'] = $values['execution'];
+
+                                $execution = new midgardmvc_helper_workflow_execution_interactive($workflow, $args['execution']);
+                                $variables = $execution->getVariables();
+
+                                if (isset($variables['review_form']))
                                 {
-                                    $_workflows[$name][$field->title]['widget'] = $field->widget;
-                                    $_workflows[$name][$field->title]['options'] = $field->options;
+                                    $form = new midgardmvc_ui_forms_form($variables['review_form']);
+                                    $fields = midgardmvc_ui_forms_generator::list_fields($form);
+                                    foreach ($fields as $field)
+                                    {
+                                        $_workflows[$name][$field->title]['widget'] = $field->widget;
+                                        $_workflows[$name][$field->title]['options'] = $field->options;
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    if (count($_workflows))
-                    {
-                        $package->qa = serialize($_workflows);
+                        if (count($_workflows))
+                        {
+                            $package->qa = serialize($_workflows);
+                        }
                     }
                 }
                 $localpackages[] = $package;
