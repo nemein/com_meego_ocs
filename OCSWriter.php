@@ -105,7 +105,11 @@ class com_meego_ocs_OCSWriter extends XMLWriter
             $this->writeElement('x-distributionid',$package->repoosversionid);
             $this->writeElement('x-dependencyid',  $package->repoosuxid);
             $this->writeElement('x-obsname',       $package->packageparent);
-            $this->writeElement('x-history',       $package->history);
+
+            if (isset($package->history))
+            {
+                $this->writeElement('x-history',       $package->history);
+            }
 
             $user = com_meego_ocs_utils::get_current_user();
             if ($user)
@@ -125,7 +129,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
             {
                 $this->writeElement('x-testing', true);
 
-                if ($package->qa)
+                if (isset($package->qa))
                 {
                     $this->writeElement('x-qa', $package->qa);
                 }
