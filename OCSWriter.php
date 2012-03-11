@@ -107,11 +107,6 @@ class com_meego_ocs_OCSWriter extends XMLWriter
             $this->writeElement('x-obsname',       $package->packageparent);
             $this->writeElement('x-history',       $package->history);
 
-            if ($package->qa)
-            {
-                $this->writeElement('x-qa', $package->qa);
-            }
-
             $user = com_meego_ocs_utils::get_current_user();
             if ($user)
             {
@@ -129,6 +124,11 @@ class com_meego_ocs_OCSWriter extends XMLWriter
                 && $package->testing)
             {
                 $this->writeElement('x-testing', true);
+
+                if ($package->qa)
+                {
+                    $this->writeElement('x-qa', $package->qa);
+                }
             }
 
             $dispatcher = midgardmvc_core::get_instance()->dispatcher;
