@@ -358,26 +358,6 @@ class com_meego_ocs_controllers_content
                 $package->attachments = $origpackage->list_attachments();
                 unset ($origpackage);
 
-                // generate the URL of the package instance
-                if (isset($args['id']))
-                {
-                    $path = midgardmvc_core::get_instance()->dispatcher->generate_url
-                    (
-                        'package_instance',
-                        array
-                        (
-                            'package' => $package->packagename,
-                            'version' => $package->packageversion,
-                            'project' => $package->repoprojectname,
-                            'repository' => $package->reponame,
-                            'arch' => $package->repoarch
-                        ),
-                        '/'
-                    );
-
-                    $package->commentsurl = com_meego_ocs_controllers_providers::generate_url($path);
-                }
-
                 // get the voters (who rated the package)
                 $package->ratings = '';
                 $ratings = com_meego_packages_controllers_application::prepare_ratings($package->packagename, true);
@@ -396,34 +376,25 @@ class com_meego_ocs_controllers_content
                     $package->ratings = serialize($ratings_);
                 }
 
-                //get history
-                $args = array(
-                    'os' => $package->repoos,
-                    'version' => $package->repoosversion,
-                    'ux' => $package->repoosux,
-                    'packagename' => $package->packagename
-                );
-
-                $package->history = null;
-
-                // set $this->data['packages']
-                com_meego_packages_controllers_application::get_history($args);
-
-                if (   is_array($this->data['packages'][$package->packagename]['all'])
-                    && count($this->data['packages'][$package->packagename]['all']))
-                {
-                    $packagehistory = array();
-
-                    foreach ($this->data['packages'][$package->packagename]['all'] as $item)
-                    {
-                        $packagehistory[$item['type']][$item['released'] . ':' . $item['version']] = $item['packageid'];
-                    }
-
-                    $package->history = serialize($packagehistory);
-                }
-
                 if (isset($args['id']))
                 {
+                    // generate the URL of the package instance
+                    $path = midgardmvc_core::get_instance()->dispatcher->generate_url
+                    (
+                        'package_instance',
+                        array
+                        (
+                            'package' => $package->packagename,
+                            'version' => $package->packageversion,
+                            'project' => $package->repoprojectname,
+                            'repository' => $package->reponame,
+                            'arch' => $package->repoarch
+                        ),
+                        '/'
+                    );
+
+                    $package->commentsurl = com_meego_ocs_controllers_providers::generate_url($path);
+
                     // get the roles
                     $package->roles = '';
                     $roles = com_meego_packages_controllers_application::get_roles($package->packageguid);
@@ -485,6 +456,33 @@ class com_meego_ocs_controllers_content
                         }
                     }
                 }
+
+                //get history
+                $args = array(
+                    'os' => $package->repoos,
+                    'version' => $package->repoosversion,
+                    'ux' => $package->repoosux,
+                    'packagename' => $package->packagename
+                );
+
+                $package->history = null;
+
+                // set $this->data['packages']
+                com_meego_packages_controllers_application::get_history($args);
+
+                if (   is_array($this->data['packages'][$package->packagename]['all'])
+                    && count($this->data['packages'][$package->packagename]['all']))
+                {
+                    $packagehistory = array();
+
+                    foreach ($this->data['packages'][$package->packagename]['all'] as $item)
+                    {
+                        $packagehistory[$item['type']][$item['released'] . ':' . $item['version']] = $item['packageid'];
+                    }
+
+                    $package->history = serialize($packagehistory);
+                }
+
                 $localpackages[] = $package;
                 $packageids[] = $package->packageid;
             }
