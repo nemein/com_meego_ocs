@@ -378,14 +378,6 @@ class com_meego_ocs_controllers_content
                     $package->commentsurl = com_meego_ocs_controllers_providers::generate_url($path);
                 }
 
-                // get the roles
-                $package->roles = '';
-                $roles = com_meego_packages_controllers_application::get_roles($package->packageguid);
-
-                if (count($roles))
-                {
-                    $package->roles = serialize($roles);
-                }
                 // get the voters (who rated the package)
                 $package->ratings = '';
                 $ratings = com_meego_packages_controllers_application::prepare_ratings($package->packagename, true);
@@ -404,32 +396,41 @@ class com_meego_ocs_controllers_content
                     $package->ratings = serialize($ratings_);
                 }
 
+                //get history
+                $args = array(
+                    'os' => $package->repoos,
+                    'version' => $package->repoosversion,
+                    'ux' => $package->repoosux,
+                    'packagename' => $package->packagename
+                );
+
+                $package->history = null;
+
+                // set $this->data['packages']
+                com_meego_packages_controllers_application::get_history($args);
+
+                if (   is_array($this->data['packages'][$package->packagename]['all'])
+                    && count($this->data['packages'][$package->packagename]['all']))
+                {
+                    $packagehistory = array();
+
+                    foreach ($this->data['packages'][$package->packagename]['all'] as $item)
+                    {
+                        $packagehistory[$item['type']][$item['released'] . ':' . $item['version']] = $item['packageid'];
+                    }
+
+                    $package->history = serialize($packagehistory);
+                }
+
                 if (isset($args['id']))
                 {
-                    //get history
-                    $args = array(
-                        'os' => $package->repoos,
-                        'version' => $package->repoosversion,
-                        'ux' => $package->repoosux,
-                        'packagename' => $package->packagename
-                    );
+                    // get the roles
+                    $package->roles = '';
+                    $roles = com_meego_packages_controllers_application::get_roles($package->packageguid);
 
-                    $package->history = null;
-
-                    // set $this->data['packages']
-                    com_meego_packages_controllers_application::get_history($args);
-
-                    if (   is_array($this->data['packages'][$package->packagename]['all'])
-                        && count($this->data['packages'][$package->packagename]['all']))
+                    if (count($roles))
                     {
-                        $packagehistory = array();
-
-                        foreach ($this->data['packages'][$package->packagename]['all'] as $item)
-                        {
-                            $packagehistory[$item['type']][$item['released'] . ':' . $item['version']] = $item['packageid'];
-                        }
-
-                        $package->history = serialize($packagehistory);
+                        $package->roles = serialize($roles);
                     }
 
                     // get workflows, if any
