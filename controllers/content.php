@@ -470,7 +470,8 @@ class com_meego_ocs_controllers_content
                 // set $this->data['packages']
                 com_meego_packages_controllers_application::get_history($args);
 
-                if (   is_array($this->data['packages'][$package->packagename]['all'])
+                if (   array_key_exists('packages', $this->data)
+                    && is_array($this->data['packages'][$package->packagename]['all'])
                     && count($this->data['packages'][$package->packagename]['all']))
                 {
                     $packagehistory = array();
