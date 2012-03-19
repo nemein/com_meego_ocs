@@ -314,6 +314,7 @@ class com_meego_ocs_controllers_content
             $packageids = array();
             $localpackages = array();
             $packages = $q->list_objects();
+            $done = array();
 
             foreach ($packages as $package)
             {
@@ -457,31 +458,31 @@ class com_meego_ocs_controllers_content
                     }
                 }
 
-                //get history
-                $args = array(
-                    'os' => $package->repoos,
-                    'version' => $package->repoosversion,
-                    'ux' => $package->repoosux,
-                    'packagename' => $package->packagename
-                );
-
-                $package->history = null;
-
-                // set $this->data['packages']
-                com_meego_packages_controllers_application::get_history($args);
-
-                if (   array_key_exists('packages', $this->data)
-                    && is_array($this->data['packages'][$package->packagename]['all'])
-                    && count($this->data['packages'][$package->packagename]['all']))
+                if ($package->packagename != '')
                 {
-                    $packagehistory = array();
+                    //get history
+                    $args = array(
+                        'os' => $package->repoos,
+                        'version' => $package->repoosversion,
+                        'ux' => $package->repoosux,
+                        'packagename' => $package->packagename
+                    );
 
-                    foreach ($this->data['packages'][$package->packagename]['all'] as $item)
+                    if (! isset($done[$package->packagename]))
                     {
-                        $packagehistory[$item['type']][$item['released'] . ':' . $item['version']] = $item['packageid'];
+                        $packagehistory = com_meego_packages_controllers_application::get_lightweight_history($args);
+                        if (count($packagehistory))
+                        {
+                            $package->history = serialize($packagehistory);
+                            $done[$package->packagename] = $package->history;
+                            //die;
+                        }
                     }
-
-                    $package->history = serialize($packagehistory);
+                    else
+                    {
+                        // just copy the history
+                        $package->history = $done[$package->packagename];
+                    }
                 }
 
                 $localpackages[] = $package;
@@ -491,7 +492,7 @@ class com_meego_ocs_controllers_content
             // write the xml content
             $ocs->writeMeta($total, $this->pagesize);
             $ocs->writeContent(array_values($localpackages));
-            unset($packageids, $localpackages);
+            unset($done, $packageids, $localpackages);
         }
         else
         {
