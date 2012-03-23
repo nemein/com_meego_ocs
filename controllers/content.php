@@ -379,6 +379,7 @@ class com_meego_ocs_controllers_content
                     $package->ratings = serialize($ratings_);
                 }
 
+                // some attributes returned only if an exact package is queried
                 if (isset($args['id']))
                 {
                     // generate the URL of the package instance
@@ -399,64 +400,19 @@ class com_meego_ocs_controllers_content
                     $package->commentsurl = com_meego_ocs_controllers_providers::generate_url($path);
 
                     // get the roles
-                    $package->roles = '';
+                    $package->roles = null;
                     $roles = com_meego_packages_controllers_application::get_roles($package->packageguid);
-
                     if (count($roles))
                     {
                         $package->roles = serialize($roles);
                     }
 
-                    // get workflows, if any
+                    // get the forms
                     $package->qa = null;
-                    $object = new com_meego_package($package->packageguid);
-                    $workflows = midgardmvc_helper_workflow_utils::get_workflows_for_object($object);
-
-                    if (is_array($workflows))
+                    $forms = com_meego_packages_utils::get_stripped_forms_for_package($package);
+                    if (count($forms))
                     {
-                        $this->mvc->component->load_library('Workflow');
-
-                        $_workflows = array();
-
-                        foreach ($workflows as $name => $workflow_data)
-                        {
-                            $args = array(
-                                'package' => $package->packagename,
-                                'version' => $package->packageversion,
-                                'project' => $package->repoprojectname,
-                                'repository' => $package->reponame,
-                                'arch' => $package->repoarch,
-                                'workflow' => $name
-                            );
-
-                            $workflow_definition = new $workflow_data['provider'];
-                            $values = $workflow_definition->start($object);
-                            $workflow = $workflow_definition->get();
-
-                            if (isset($values['execution']))
-                            {
-                                $args['execution'] = $values['execution'];
-
-                                $execution = new midgardmvc_helper_workflow_execution_interactive($workflow, $args['execution']);
-                                $variables = $execution->getVariables();
-
-                                if (isset($variables['review_form']))
-                                {
-                                    $form = new midgardmvc_ui_forms_form($variables['review_form']);
-                                    $fields = midgardmvc_ui_forms_generator::list_fields($form);
-                                    foreach ($fields as $field)
-                                    {
-                                        $_workflows[$name][$field->title]['widget'] = $field->widget;
-                                        $_workflows[$name][$field->title]['options'] = $field->options;
-                                    }
-                                }
-                            }
-                        }
-
-                        if (count($_workflows))
-                        {
-                            $package->qa = serialize($_workflows);
-                        }
+                        $package->qa = serialize($forms);
                     }
                 }
 
