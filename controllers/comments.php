@@ -165,9 +165,13 @@ class com_meego_ocs_controllers_comments
             return;
         }
 
-        if ($_POST['type'] != 1)
+        if (   $_POST['type'] != '1'
+            && $_POST['type'] != '8')
         {
-            throw new midgardmvc_exception_notfound("Only 'content' type ('1') is supported for now. Please set it.");
+            $ocs->writeError('Content type: ' . $_POST['type'] . ' is not supported.', 104);
+            $ocs->endDocument();
+            self::output_xml($ocs);
+            return;
         }
 
         $primary = new com_meego_package();
@@ -178,49 +182,58 @@ class com_meego_ocs_controllers_comments
             throw new midgardmvc_exception_notfound("Content object not found");
         }
 
-        $comment = new com_meego_comments_comment();
-
-        if (   isset($_POST['parent'])
-            && !empty($_POST['parent']))
+        switch ($_POST['type'])
         {
-            $parent = new com_meego_comments_comment();
-            $parent->get_by_id((int) $_POST['parent']);
-            if ($parent->to != $primary->guid)
-            {
-                throw new midgardmvc_exception_notfound("Parent comment is not related to the content item");
-            }
-            $comment->up = $parent->id;
+            case 1:
+                $comment = new com_meego_comments_comment();
+
+                if (   isset($_POST['parent'])
+                    && !empty($_POST['parent']))
+                {
+                    $parent = new com_meego_comments_comment();
+                    $parent->get_by_id((int) $_POST['parent']);
+                    if ($parent->to != $primary->guid)
+                    {
+                        throw new midgardmvc_exception_notfound("Parent comment is not related to the content item");
+                    }
+                    $comment->up = $parent->id;
+                }
+
+                $comment->to = $primary->guid;
+                $comment->content = $_POST['message'];
+
+                if (   isset($_POST['subject'])
+                    && !empty($_POST['subject']))
+                {
+                    $comment->title = $_POST['subject'];
+                }
+
+                $comment->create();
+
+                if ($comment->guid)
+                {
+                    $rating = new com_meego_ratings_rating();
+
+                    $rating->to = $primary->guid;
+                    // for comments we have no votes
+                    $rating->rating = 0;
+
+                    $rating->comment = $comment->id;
+
+                    if (! $rating->create())
+                    {
+                        throw new midgardmvc_exception_notfound("Could not create rating object");
+                    }
+                }
+                break;
+            case 8:
+                break;
         }
 
-        $comment->to = $primary->guid;
-        $comment->content = $_POST['message'];
-
-        if (   isset($_POST['subject'])
-            && !empty($_POST['subject']))
-        {
-            $comment->title = $_POST['subject'];
-        }
-
-        $comment->create();
-
-        if ($comment->guid)
-        {
-            $rating = new com_meego_ratings_rating();
-
-            $rating->to = $primary->guid;
-            // for comments we have no votes
-            $rating->rating = 0;
-
-            $rating->comment = $comment->id;
-
-            if (! $rating->create())
-            {
-                throw new midgardmvc_exception_notfound("Could not create rating object");
-            }
-        }
-
-        $ocs->writeMeta(0);
+        // POST went fine
+        $ocs->writeMeta(null, null, 'Posting succeded.', 'ok', 100);
         $ocs->endDocument();
+
         self::output_xml($ocs);
     }
 
