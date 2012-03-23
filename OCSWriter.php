@@ -116,6 +116,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
             }
 
             $user = com_meego_ocs_utils::get_current_user();
+
             if ($user)
             {
                 if (com_meego_ocs_utils::user_has_voted($package->packageid, $user->person))

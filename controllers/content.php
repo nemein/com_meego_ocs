@@ -10,11 +10,13 @@ class com_meego_ocs_controllers_content
     // @todo: make the default page size configurable
     //        and set it in the constructor
     var $pagesize = 100;
+    var $user = null;
 
     public function __construct(midgardmvc_core_request $request)
     {
         $this->request = $request;
         $this->mvc = midgardmvc_core::get_instance();
+        $this->user = com_meego_ocs_utils::get_current_user();
     }
 
     /**
@@ -615,16 +617,20 @@ class com_meego_ocs_controllers_content
      */
     public function post_vote(array $args)
     {
+        $auth = false;
         $ocs = new com_meego_ocs_OCSWriter();
 
-        // Voting requires authentication
-        if (! com_meego_ocs_utils::authenticate($args))
+        if ($this->user)
         {
-            // extend the OCS spec with a custom status code
-            $this->mvc->log(__CLASS__, 'Attempt to vote by anonymous. No luck.', 'info');
-            $ocs->writeError('Voting requires authentication. Please login first.', 102);
+            $auth = true;
         }
         else
+        {
+            // Voting requires authentication
+            $auth = com_meego_ocs_utils::authenticate($args);
+        }
+
+        if ($auth)
         {
             $primary = new com_meego_package();
             $primary->get_by_id((int) $args['contentid']);
@@ -637,15 +643,14 @@ class com_meego_ocs_controllers_content
             else
             {
                 $voted = false;
-                $user = com_meego_ocs_utils::get_current_user();
 
                 // the multiple voting is configurable, pls check the config file
                 if (! $this->mvc->configuration->allow_multiple_voting)
                 {
                     // if not allowed then check if the user has voted already
-                    if (com_meego_ocs_utils::user_has_voted($primary->id, $user->person))
+                    if (com_meego_ocs_utils::user_has_voted($primary->id, $this->user->person))
                     {
-                        $this->mvc->log(__CLASS__, "$user->login has already voted for $primary->name (with id: $primary->id) and multiple votings are disabled", 'info');
+                        $this->mvc->log(__CLASS__, "$this->user->login has already voted for $primary->name (with id: $primary->id) and multiple votings are disabled", 'info');
                         $ocs->writeError('Multiple voting not allowed and user has already voted this object.', 103);
                     }
                 }
@@ -671,7 +676,7 @@ class com_meego_ocs_controllers_content
 
                     if (! $rating->create())
                     {
-                        $this->mvc->log(__CLASS__, 'Failed to create rating object. User: ' . $user->login . ', application: ' . $primary->name . ' (with id: ' . $primary->id . ')', 'info');
+                        $this->mvc->log(__CLASS__, 'Failed to create rating object. User: ' . $this->user->login . ', application: ' . $primary->name . ' (with id: ' . $primary->id . ')', 'info');
                         throw new midgardmvc_exception_notfound("Could not create rating object");
                     }
 
@@ -680,9 +685,15 @@ class com_meego_ocs_controllers_content
 
                     $ocs->writeMeta(0);
 
-                    $this->mvc->log(__CLASS__, 'Rating (' . $rating->rating . ') submitted by ' . $user->login . ' for ' . $primary->name . ' (with id: ' . $primary->id . ')', 'info');
+                    $this->mvc->log(__CLASS__, 'Rating (' . $rating->rating . ') submitted by ' . $this->user->login . ' for ' . $primary->name . ' (with id: ' . $primary->id . ')', 'info');
                 }
             }
+        }
+        else
+        {
+            // extend the OCS spec with a custom status code
+            $this->mvc->log(__CLASS__, 'Attempt to vote by anonymous. No luck.', 'info');
+            $ocs->writeError('Voting requires authentication. Please login first.', 102);
         }
 
         $ocs->endDocument();

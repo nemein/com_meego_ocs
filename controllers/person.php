@@ -32,6 +32,7 @@ class com_meego_ocs_controllers_person
         {
             case 'LDAP':
                 $info = com_meego_ocs_utils::ldap_check($tokens);
+                $auth = com_meego_ocs_utils::authenticate();
                 break;
             case 'basic':
             default:
@@ -40,7 +41,8 @@ class com_meego_ocs_controllers_person
                 $info->handle_exception($e);
         }
 
-        if (! $info)
+        if (   ! $info
+            || ! $auth)
         {
             $ocs->writeError('Invalid account', 102);
             $ocs->endDocument();

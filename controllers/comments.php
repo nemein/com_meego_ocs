@@ -4,9 +4,12 @@
  */
 class com_meego_ocs_controllers_comments
 {
+    var $user = null;
+
     public function __construct(midgardmvc_core_request $request)
     {
         $this->request = $request;
+        $this->user = com_meego_ocs_utils::get_current_user();
     }
 
     public function get_comments(array $args)
@@ -132,10 +135,15 @@ class com_meego_ocs_controllers_comments
      */
     public function post_add(array $args)
     {
-        // Voting requires authentication
-        if (! com_meego_ocs_utils::authenticate($args))
+        if (! $this->user)
         {
-            return null;
+            // Voting requires authentication
+            $auth = com_meego_ocs_utils::authenticate($args);
+
+            if (! $auth)
+            {
+                return null;
+            }
         }
 
         $ocs = new com_meego_ocs_OCSWriter();

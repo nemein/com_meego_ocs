@@ -52,17 +52,11 @@ class com_meego_ocs_utils
      *
      * Limitation: only LDAP auth is supported properly at the moment
      *
-     * @param array with login name and password
-     * @return array with authentication info
+     * @return boolean
      */
-    public function authenticate($args = null)
+    public function authenticate()
     {
         $auth = null;
-
-        if (! is_array($args))
-        {
-            return null;
-        }
 
         switch (midgardmvc_core::get_instance()->configuration->ocs_authentication)
         {
