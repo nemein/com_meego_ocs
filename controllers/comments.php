@@ -4,14 +4,19 @@
  */
 class com_meego_ocs_controllers_comments
 {
+    var $mvc = null;
     var $user = null;
 
     public function __construct(midgardmvc_core_request $request)
     {
         $this->request = $request;
         $this->user = com_meego_ocs_utils::get_current_user();
+        $this->mvc = midgardmvc_core::get_instance();
     }
 
+    /**
+     * @todo: docs
+     */
     public function get_comments(array $args)
     {
         if ($args['type'] != 1)
@@ -19,8 +24,8 @@ class com_meego_ocs_controllers_comments
             throw new midgardmvc_exception_notfound("Only CONTENT type supported");
         }
 
-        $primary = new com_meego_package();
-        $primary->get_by_id((int) $args['contentid1']);
+        $package = new com_meego_package();
+        $package->get_by_id((int) $args['contentid1']);
 
         $storage = new midgard_query_storage('com_meego_package_ratings');
         $q = new midgard_query_select($storage);
@@ -36,7 +41,7 @@ class com_meego_ocs_controllers_comments
         $qc->add_constraint(new midgard_query_constraint (
             new midgard_query_property('name'),
             '=',
-            new midgard_query_value($primary->name)
+            new midgard_query_value($package->name)
         ));
 
         $q->set_constraint($qc);
@@ -60,7 +65,7 @@ class com_meego_ocs_controllers_comments
         foreach ($comments as $comment)
         {
             if (   $comment->commentid == 0
-                && ! midgardmvc_core::get_instance()->configuration->show_ratings_without_comments)
+                && ! $this->mvc->configuration->show_ratings_without_comments)
             {
                 // skip the rating if it has no comment and the configuration excludes such ratings
                 --$cnt;
@@ -74,7 +79,7 @@ class com_meego_ocs_controllers_comments
         foreach ($comments as $comment)
         {
             if (   $comment->commentid == 0
-                && ! midgardmvc_core::get_instance()->configuration->show_ratings_without_comments)
+                && ! $this->mvc->configuration->show_ratings_without_comments)
             {
                 // skip the rating if it has no comment and the configuration excludes such ratings
                 continue;
@@ -88,6 +93,9 @@ class com_meego_ocs_controllers_comments
         self::output_xml($ocs);
     }
 
+    /**
+     * @todo: docs
+     */
     protected function limit_and_offset_from_query()
     {
         $query = $this->request->get_query();
@@ -98,7 +106,7 @@ class com_meego_ocs_controllers_comments
             $page = $query['page'];
         }
 
-        $pagesize = midgardmvc_core::get_instance()->configuration->list_pagesize;
+        $pagesize = $this->mvc->configuration->list_pagesize;
         if (isset($query['pagesize']))
         {
             $pagesize = $query['pagesize'];
@@ -107,6 +115,9 @@ class com_meego_ocs_controllers_comments
         return array($pagesize, $page * $pagesize);
     }
 
+    /**
+     * @todo: docs
+     */
     private function comment_to_ocs(com_meego_package_ratings $rating, com_meego_ocs_OCSWriter $ocs)
     {
         $ocs->startElement('comment');
@@ -135,6 +146,8 @@ class com_meego_ocs_controllers_comments
      */
     public function post_add(array $args)
     {
+        $success = true;
+
         if (! $this->user)
         {
             // Voting requires authentication
@@ -174,74 +187,197 @@ class com_meego_ocs_controllers_comments
             return;
         }
 
-        $primary = new com_meego_package();
-        $primary->get_by_id((int) $_POST['content']);
+        $package = new com_meego_package();
+        $package->get_by_id((int) $_POST['content']);
 
-        if (! $primary->guid)
+        if (! $package->guid)
         {
-            throw new midgardmvc_exception_notfound("Content object not found");
+            $success = false;
+            $this->mvc->log(__CLASS__, 'Package with id: ' . $_POST['content'] . ' not found.', 'error');
         }
 
-        switch ($_POST['type'])
+        if ($success)
         {
-            case 1:
-                $comment = new com_meego_comments_comment();
+            switch ($_POST['type'])
+            {
+                case 1:
+                    $message = 'Rating via OCS failed. Could not create rating object for package ' . $package->name . '(id: ' . $package->id . ').';
+                    $comment = new com_meego_comments_comment();
 
-                if (   isset($_POST['parent'])
-                    && !empty($_POST['parent']))
-                {
-                    $parent = new com_meego_comments_comment();
-                    $parent->get_by_id((int) $_POST['parent']);
-                    if ($parent->to != $primary->guid)
+                    if (   isset($_POST['parent'])
+                        && !empty($_POST['parent']))
                     {
-                        throw new midgardmvc_exception_notfound("Parent comment is not related to the content item");
+                        $parent = new com_meego_comments_comment();
+                        $parent->get_by_id((int) $_POST['parent']);
+                        if ($parent->to != $package->guid)
+                        {
+                            $success = false;
+                            $this->mvc->log(__CLASS__, $message . ' Parent comment is not related to the content item', 'error');
+                        }
+                        $comment->up = $parent->id;
                     }
-                    $comment->up = $parent->id;
-                }
 
-                $comment->to = $primary->guid;
-                $comment->content = $_POST['message'];
+                    $comment->to = $package->guid;
+                    $comment->content = $_POST['message'];
 
-                if (   isset($_POST['subject'])
-                    && !empty($_POST['subject']))
-                {
-                    $comment->title = $_POST['subject'];
-                }
-
-                $comment->create();
-
-                if ($comment->guid)
-                {
-                    $rating = new com_meego_ratings_rating();
-
-                    $rating->to = $primary->guid;
-                    // for comments we have no votes
-                    $rating->rating = 0;
-
-                    $rating->comment = $comment->id;
-
-                    if (! $rating->create())
+                    if (   isset($_POST['subject'])
+                        && !empty($_POST['subject']))
                     {
-                        throw new midgardmvc_exception_notfound("Could not create rating object");
+                        $comment->title = $_POST['subject'];
                     }
-                }
-                break;
-            case 8:
-                break;
+
+                    $comment->create();
+
+                    if ($comment->guid)
+                    {
+                        $rating = new com_meego_ratings_rating();
+
+                        $rating->to = $package->guid;
+                        // for comments we have no votes
+                        $rating->rating = 0;
+
+                        $rating->comment = $comment->id;
+
+                        if (! $rating->create())
+                        {
+                            $success = false;
+                            $this->mvc->log(__CLASS__, $message, 'error');
+                        }
+                    }
+                    break;
+                case 8:
+                    $name = substr($_POST['message'], 0, strpos($_POST['message'], ':'));
+                    $workflows = $this->mvc->configuration->workflows;
+
+                    if (array_key_exists($name, $workflows))
+                    {
+                        if (is_object($package))
+                        {
+                            $this->mvc->component->load_library('Workflow');
+                            $workflow_definition = new $workflows[$name]['provider'];
+                            $values = $workflow_definition->start($package);
+
+                            if (array_key_exists('execution', $values))
+                            {
+                                // get the db form and fill in the fields
+                                $form = new midgardmvc_ui_forms_form($values['review_form']);
+
+                                $transaction = new midgard_transaction();
+                                $transaction->begin();
+
+                                $instance = new midgardmvc_ui_forms_form_instance();
+                                $instance->form = $form->id;
+                                $instance->relatedobject = $package->guid;
+                                $instance->create();
+
+                                if (isset($instance->guid))
+                                {
+                                    // give values to the db fields taken from the posted values and store each of them
+                                    // use the form instance ID as "form" property of the fields
+                                    $posted_values = explode(',', substr($_POST['message'], strpos($_POST['message'], ':') + 1));
+                                    $db_fields = midgardmvc_ui_forms_generator::list_fields($form);
+
+                                    $i = 0;
+                                    foreach ($db_fields as $dbfield)
+                                    {
+                                        if (! $success)
+                                        {
+                                            // if 1 field creation failed then end this loop as fast as possible
+                                            continue;
+                                        }
+
+                                        switch ($dbfield->widget)
+                                        {
+                                            case 'checkbox':
+                                                $holder = "booleanvalue";
+                                                $value = $posted_values[$i];
+                                                break;
+                                            default:
+                                                $options = explode(',', $dbfield->options);
+                                                $value = $options[(int)$posted_values[$i]];
+
+                                                $holder = "stringvalue";
+                                        }
+
+                                        $field_instance = new midgardmvc_ui_forms_form_instance_field();
+                                        $field_instance->form = $instance->id;
+                                        $field_instance->field = $dbfield->guid;
+                                        $field_instance->$holder = $value;
+
+                                        if (! $field_instance->create())
+                                        {
+                                            $success = false;
+                                        }
+
+                                        ++$i;
+                                    }
+
+                                    if ($success)
+                                    {
+                                        $message = 'QA via OCS by user ' . $this->user->login . ' for package: ' . $package->name . ' (id: ' . $package->id . ')';
+
+                                        try
+                                        {
+                                            $workflow = $workflow_definition->get();
+                                            $execution = new midgardmvc_helper_workflow_execution_interactive($workflow, $values['execution']);
+                                        }
+                                        catch (ezcWorkflowExecutionException $e)
+                                        {
+                                            $success = false;
+                                            $this->mvc->log(__CLASS__, $message . ' failed. Workflow: ' . $values['workflow'] . ' not found. See error: ' . $e->getMessage(), 'error');
+                                        }
+
+                                        if ($success)
+                                        {
+                                            $args = array('review' => $instance->guid);
+
+                                            try
+                                            {
+                                                $values = $workflow_definition->resume($execution->guid, $args);
+                                            }
+                                            catch (ezcWorkflowInvalidInputException $e)
+                                            {
+                                                $success = false;
+                                                $this->mvc->log(__CLASS__, $message . ' failed. Maybe a quick re-submit? See error: ' . $e->getMessage(), 'error');
+                                            }
+                                            $transaction->commit();
+                                            $this->mvc->log(__CLASS__, $message . ' finished. New form guid: ' . $instance->guid, 'info');
+                                        }
+                                    }
+                                }
+
+                                if (! $success)
+                                {
+                                    $this->mvc->log(__CLASS__, $message . ' failed. Probably a form instance or a field creation failed.', 'info');
+                                    $transaction->rollback();
+                                }
+                            }
+                        }
+                    }
+                    break;
+            }
+
+            // POST went fine
+            $ocs->writeMeta(null, null, 'Posting succeded.', 'ok', 100);
+        }
+        else
+        {
+            $ocs->writeError('Comment posting (type: ' . $_POST['type'] . ') failed.');
         }
 
-        // POST went fine
-        $ocs->writeMeta(null, null, 'Posting succeded.', 'ok', 100);
         $ocs->endDocument();
-
         self::output_xml($ocs);
     }
 
+    /**
+     * @todo: docs
+     */
     private static function output_xml($xml)
     {
-        midgardmvc_core::get_instance()->dispatcher->header('Content-type: application/xml; charset=utf-8');
+        $mvc = midgardmvc_core::get_instance();
+        $mvc->dispatcher->header('Content-type: application/xml; charset=utf-8');
         echo $xml->outputMemory(true);
 
-        midgardmvc_core::get_instance()->dispatcher->end_request();
+        $mvc->dispatcher->end_request();
     }
 }
