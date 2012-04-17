@@ -133,6 +133,7 @@ class com_meego_ocs_OCSWriter extends XMLWriter
                 && $package->testing)
             {
                 $this->writeElement('x-testing', true);
+                $this->writeElement('x-qa-score', $package->packagescore);
 
                 if (isset($package->qa))
                 {
