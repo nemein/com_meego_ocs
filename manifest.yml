@@ -94,3 +94,7 @@ routes:
         path: /v1/person/check
         controller: com_meego_ocs_controllers_person
         action: check
+    set_attribute:
+        path: /v1/privatedata/setattribute/{$context}/{$key}
+        controller: com_meego_ocs_controllers_privatedata
+        action: setattribute
