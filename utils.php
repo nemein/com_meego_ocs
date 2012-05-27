@@ -175,4 +175,15 @@ class com_meego_ocs_utils
 
         return $retval;
     }
+
+    /**
+     * End the run with an OCS error message
+     */
+    private static function end_with_error($message, $status)
+    {
+        $ocs = new com_meego_ocs_OCSWriter();
+        $ocs->writeError($message, $status);
+        $ocs->endDocument();
+        self::output_xml($ocs);
+    }
 }
