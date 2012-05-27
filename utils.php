@@ -179,11 +179,23 @@ class com_meego_ocs_utils
     /**
      * End the run with an OCS error message
      */
-    private static function end_with_error($message, $status)
+    public static function end_with_error($message, $status)
     {
         $ocs = new com_meego_ocs_OCSWriter();
         $ocs->writeError($message, $status);
         $ocs->endDocument();
         self::output_xml($ocs);
+    }
+
+    /**
+     * @todo: docs
+     */
+    public static function output_xml($xml)
+    {
+        $mvc = midgardmvc_core::get_instance();
+        $mvc->dispatcher->header('Content-type: application/xml; charset=utf-8');
+        echo $xml->outputMemory(true);
+        $mvc->dispatcher->end_request();
+        unset($mvc);
     }
 }

@@ -22,7 +22,6 @@ class com_meego_ocs_controllers_privatedata
      */
     public function post_setattribute(array $args)
     {
-        $verb = '';
         $summary = '';
         $success = true;
 
@@ -49,9 +48,11 @@ class com_meego_ocs_controllers_privatedata
         // check if the context is supported
         switch ($args['context'])
         {
-            case 'installed':
-                $verb = 'received';
+            case 'save':
                 $summary = 'User succesfully installed an application.';
+                break;
+            case 'unsave':
+                $summary = 'User succesfully uninstalled an application.';
                 break;
             default:
                 com_meego_ocs_utils::end_with_error('This context: ' . $args['context'] . ' is not supported', 104);
@@ -76,7 +77,7 @@ class com_meego_ocs_controllers_privatedata
             // create new activity object
             $activity = new midgard_activity();
             $activity->actor = $person->id;
-            $activity->verb = $verb;
+            $activity->verb = $args['context'];
             $activity->target = $package->guid;
             $activity->summary = $summary;
             $activity->application = 'Apps';
@@ -93,18 +94,6 @@ class com_meego_ocs_controllers_privatedata
         $ocs = new com_meego_ocs_OCSWriter();
         $ocs->writeMeta(null, null, 'Attribute setting succeded.', 'ok', 100);
         $ocs->endDocument();
-        self::output_xml($ocs);
-    }
-
-    /**
-     * @todo: docs
-     */
-    private static function output_xml($xml)
-    {
-        $mvc = midgardmvc_core::get_instance();
-        $mvc->dispatcher->header('Content-type: application/xml; charset=utf-8');
-        echo $xml->outputMemory(true);
-        $mvc->dispatcher->end_request();
-        unset($mvc);
+        com_meego_ocs_utils::output_xml($ocs);
     }
 }
