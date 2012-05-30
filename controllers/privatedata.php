@@ -54,6 +54,9 @@ class com_meego_ocs_controllers_privatedata
             case 'unsave':
                 $summary = 'User succesfully uninstalled an application.';
                 break;
+            case 'savefail':
+                $summary = 'Application installation failed.';
+                break;
             default:
                 com_meego_ocs_utils::end_with_error('This context: ' . $args['context'] . ' is not supported', 104);
         }
