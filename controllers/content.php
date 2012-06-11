@@ -642,6 +642,10 @@ class com_meego_ocs_controllers_content
                     $ocs->writeMeta(0);
 
                     $this->mvc->log(__CLASS__, 'Rating (' . $rating->rating . ') submitted by ' . $this->user->login . ' for ' . $primary->name . ' (with id: ' . $primary->id . ')', 'info');
+                    // create activity object
+                    $verb = 'rate';
+                    $summary = 'The user rated an application via OCS.';
+                    $res = midgardmvc_account_controllers_activity::create_activity($rating->metadata->creator, $verb, $rating->to, $summary, 'Apps', $rating->metadata->created);
                 }
             }
         }
