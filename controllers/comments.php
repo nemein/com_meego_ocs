@@ -24,8 +24,24 @@ class com_meego_ocs_controllers_comments
             throw new midgardmvc_exception_notfound("Only CONTENT type supported");
         }
 
+        $cnt = 0;
+
         $package = new com_meego_package();
-        $package->get_by_id((int) $args['contentid1']);
+        $ocs = new com_meego_ocs_OCSWriter();
+
+        try
+        {
+            $package->get_by_id((int) $args['contentid1']);
+        }
+        catch (midgard_error_exception $e)
+        {
+            $error = true;
+            $this->mvc->log(__CLASS__, 'Probably missing package with id:  ' . $args['contentid1'] . '.', 'warning');
+
+            $ocs->writeError('Package not found', 101);
+            $ocs->endDocument();
+            self::output_xml($ocs);
+        }
 
         $storage = new midgard_query_storage('com_meego_package_ratings');
         $q = new midgard_query_select($storage);
@@ -59,8 +75,6 @@ class com_meego_ocs_controllers_comments
         $q->execute();
 
         $comments = $q->list_objects();
-
-        $ocs = new com_meego_ocs_OCSWriter();
 
         foreach ($comments as $comment)
         {
@@ -205,7 +219,7 @@ class com_meego_ocs_controllers_comments
                     $comment = new com_meego_comments_comment();
 
                     if (   isset($_POST['parent'])
-                        && !empty($_POST['parent']))
+                        && ! empty($_POST['parent']))
                     {
                         $parent = new com_meego_comments_comment();
                         $parent->get_by_id((int) $_POST['parent']);
@@ -221,7 +235,7 @@ class com_meego_ocs_controllers_comments
                     $comment->content = $_POST['message'];
 
                     if (   isset($_POST['subject'])
-                        && !empty($_POST['subject']))
+                        && ! empty($_POST['subject']))
                     {
                         $comment->title = $_POST['subject'];
                     }
@@ -238,10 +252,11 @@ class com_meego_ocs_controllers_comments
 
                         $rating->comment = $comment->id;
 
-                        if (! $rating->create())
+                        $success = $rating->create();
+
+                        if ($success)
                         {
-                            $success = false;
-                            $this->mvc->log(__CLASS__, $message, 'error');
+                            $message = 'Rating via OCS finished. New rating object is: ' . $rating->guid . '.';
                         }
                     }
                     break;
@@ -341,7 +356,8 @@ class com_meego_ocs_controllers_comments
                                                 $this->mvc->log(__CLASS__, $message . ' failed. Maybe a quick re-submit? See error: ' . $e->getMessage(), 'error');
                                             }
                                             $transaction->commit();
-                                            $this->mvc->log(__CLASS__, $message . ' finished. New form guid: ' . $instance->guid, 'info');
+
+                                            $this->mvc->log(__CLASS__, 'New QA form guid: ' . $instance->guid, 'info');
                                         }
                                     }
                                 }
@@ -357,12 +373,43 @@ class com_meego_ocs_controllers_comments
                     break;
             }
 
-            // POST went fine
-            $ocs->writeMeta(null, null, 'Posting succeded.', 'ok', 100);
+            if ($success)
+            {
+                // POST went fine
+                $ocs->writeMeta(null, null, 'Posting succeded.', 'ok', 100);
+                $this->mvc->log(__CLASS__, $message, 'info');
+
+                // create activity object
+                $created = null;
+                switch ($_POST['type'])
+                {
+                    case 1:
+                        $verb = 'comment';
+                        $summary = 'The user commented an application via OCS.';
+                        $creator = $rating->metadata->creator;
+                        $created = $rating->metadata->created;
+                        $target = $rating->to;
+                        break;
+                    case 8:
+                        $verb = 'review';
+                        $summary = 'The user reviewed an application via OCS.';
+                        $creator = $instance->metadata->creator;
+                        $created = $instance->metadata->created;
+                        $target = $instance->relatedobject;
+                        break;
+                }
+                if ($created)
+                {
+                    $res = midgardmvc_account_controllers_activity::create_activity($creator, $verb, $target, $summary, 'Apps', $created);
+                }
+                unset($created, $creator, $target);
+            }
         }
-        else
+
+        if (! $success)
         {
             $ocs->writeError('Comment posting (type: ' . $_POST['type'] . ') failed.');
+            $this->mvc->log(__CLASS__, $message . ' failed.', 'info');
         }
 
         $ocs->endDocument();
