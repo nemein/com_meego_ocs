@@ -1,7 +1,9 @@
 version: 0.0.1
+
 requires:
     com_meego_packages:
         - {type: github, user: nemein, repository: com_meego_packages, branch: master}
+
 routes:
     ocs_providers:
         path: /providers.xml
