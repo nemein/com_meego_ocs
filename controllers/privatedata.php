@@ -75,22 +75,12 @@ class com_meego_ocs_controllers_privatedata
 
         if ($success)
         {
-            $person = new midgard_person($this->user->person);
+            $res = midgardmvc_account_controllers_activity::create_activity($this->user->person, $args['context'], $package->guid, $summary, 'Apps');
 
-            // create new activity object
-            $activity = new midgard_activity();
-            $activity->actor = $person->id;
-            $activity->verb = $args['context'];
-            $activity->target = $package->guid;
-            $activity->summary = $summary;
-            $activity->application = 'Apps';
-
-            $res = $activity->create();
             if (! $res)
             {
                 com_meego_ocs_utils::end_with_error('Failed to create activity object.', 106);
             }
-            unset($person);
         }
 
         // everything went fine
